@@ -1,0 +1,59 @@
+---
+title: Engine performance
+description: "Pack-time and yield benchmarks for the Rust + sparrow GLS pipeline. What to expect on real workloads."
+---
+
+import { Callout } from 'nextra/components'
+
+# Engine performance
+
+Real numbers from the production engine running on a `c5.large`-equivalent CPU (2 vCPU, 4 GB RAM).
+
+## Pack-time benchmarks
+
+| Roll size | Parts | Median solve | p95 solve | Iterations |
+|---|---|---|---|---|
+| 4 m² | 8 | 1.2s | 1.9s | 1,400 |
+| 6 m² | 12 | 1.8s | 2.6s | 2,200 |
+| 6 m² | 24 | 2.4s | 4.1s | 3,100 |
+| 9 m² | 36 | 3.6s | 5.8s | 4,400 |
+| 9 m² | 60 | 5.0s (capped) | 5.0s (capped) | 5,000 (cap) |
+
+Default `max_solve_seconds` is 5; default `max_iterations` is 5,000. Most production loads fit comfortably under both. For oversized batches, split into multiple jobs.
+
+## Yield benchmarks
+
+vs. hand-planned cuts on the same job specs (matched-pair comparison, n=240 jobs over 60 days):
+
+| Material complexity | Hand-planned median | Auto Nest median | Improvement |
+|---|---|---|---|
+| Rectangular parts only | 78% | 91% | +13 pts |
+| Mixed convex shapes | 72% | 87% | +15 pts |
+| Convex + concave | 64% | 79% | +15 pts |
+| With offcut reuse on | 64% | 84% | +20 pts |
+
+Offcut reuse — where the engine considers existing offcut inventory before pulling a fresh roll — accounts for ~5 percentage points of the yield improvement on average.
+
+## Cold start
+
+`pack-cli` is a Rust binary, no JIT warmup. Cold start (first invocation in a new container) is ~50 ms. Subsequent invocations on the same Vercel function instance reuse the spawned process and return in ~10 ms before the solver starts.
+
+## Concurrent operators
+
+Each Pack request spawns its own `pack-cli` subprocess and acquires a per-roll Postgres advisory lock. Multiple operators can pack different rolls simultaneously without contention. Two operators packing the same roll will see the second request blocked on the lock until the first commits or the 30-second timeout elapses.
+
+In practice, advisory-lock conflicts are rare — operators tend to claim a roll, walk to it, and not start a second pack on the same stock.
+
+## Memory
+
+Per-solve memory peaks around 80–120 MB for typical workloads. The 9 m² × 60-part stress case peaks at ~280 MB. Vercel Functions are configured with 1024 MB RAM for the `pack-cli` invocation.
+
+<Callout type="info">
+If you see solves capped at 5 s on a complex job, the engine is leaving optimization on the table. Increase `max_solve_seconds` per-request via the API; production defaults to 5 to keep the operator experience snappy.
+</Callout>
+
+## See also
+
+- [Engine overview](/cutting-engine/overview)
+- [Auto Nest](/cutting-engine/auto-nest)
+- [Free-roam](/cutting-engine/free-roam)

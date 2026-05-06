@@ -1,0 +1,62 @@
+---
+title: Suppliers
+description: "Supplier records, materials they carry, lead times, and price history. The vendor side of the inventory model."
+---
+
+import { Callout } from 'nextra/components'
+
+# Suppliers
+
+Suppliers are first-class records in Rubberfit. They back the [purchase order](/inventory/purchase-orders) workflow and the [reorder rules](/inventory/reorder-rules) "preferred supplier" choice.
+
+## The supplier record
+
+`inventory.suppliers`:
+
+| Column | Notes |
+|---|---|
+| `id` | UUID |
+| `name` | Display name |
+| `primary_contact_email` | For PO communications |
+| `primary_contact_phone` | Optional |
+| `payment_terms` | Free-text (e.g., "Net 30") |
+| `default_lead_time_days` | Used to suggest reorder thresholds |
+| `notes` | Free-text |
+| `status` | `active` / `inactive` |
+
+## Many-to-many with materials
+
+The `inventory.material_suppliers` join table links each supplier to the materials they carry. A supplier can carry many materials; a material can come from many suppliers.
+
+The join row also stores per-supplier-per-material:
+
+- `default_price_per_m2` — the most-recently-recorded price
+- `min_order_qty_m2` — minimum draft quantity
+- `notes` — supplier-specific notes for this material
+
+## Price history
+
+Every received PO line writes to `inventory.price_history`:
+
+| Column | Notes |
+|---|---|
+| `material_id`, `supplier_id` | The pair |
+| `price_per_m2` | What you paid |
+| `quantity_m2` | How much |
+| `received_at` | UTC |
+| `purchase_order_id` | FK back to the source |
+
+The dashboard surfaces a per-material price chart with all suppliers overlaid. When two suppliers carry the same material, the chart immediately shows divergence.
+
+## Why this matters
+
+Most general MFG SaaS treats suppliers as a contact-card lookup. Rubberfit treats them as the source of truth for material cost trends. The price-history table makes "is supplier A still the best deal on durometer-70 EPDM?" a one-query answer.
+
+<Callout type="info">
+Supplier records are soft-deleted (`status = inactive`) rather than dropped. Existing PO history and price-history rows keep their FK pointing at the inactive record so the audit trail stays intact.
+</Callout>
+
+## See also
+
+- [Purchase orders](/inventory/purchase-orders)
+- [Reorder rules](/inventory/reorder-rules)

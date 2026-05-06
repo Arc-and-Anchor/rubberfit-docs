@@ -1,0 +1,72 @@
+---
+title: Customer PDFs
+description: "Branded customer-facing job receipts, with internal artifacts (layouts, operator notes, yield) intentionally hidden."
+---
+
+import { Callout } from 'nextra/components'
+
+# Customer PDFs
+
+Every job ships with a customer-facing PDF. It is intentionally minimal — your customer doesn't need to see your operator notes, your cut layouts, or your yield percentage. They need to see what they ordered, when it ships, and how to find it.
+
+## What's in the PDF
+
+- Job number + customer barcode (used for pickup or shipping reference)
+- Customer name + contact (just what was on the job)
+- Order summary: material, dimensions, quantity per part, total quantity
+- Pricing (if `customer_visible_pricing` is enabled in workspace settings)
+- Promised delivery date
+- Workspace branding (logo + footer; configurable)
+
+## What's NOT in the PDF
+
+- The cut layout (the SVG of how parts were arranged on the roll)
+- Any operator notes
+- The roll's `barcode` or `lot_number`
+- Yield percentage
+- Internal pricing (cost-per-m² to you)
+- Engine version / solve time / iteration count
+- Audit-log entries
+
+This is by design. The PDF is a receipt, not an audit artifact.
+
+<Callout type="warning">
+Don't paste internal artifacts (layouts, operator photos, audit screenshots) into the customer PDF generation pipeline. The system will reject them, but enforcing this at the policy level matters too — customers shouldn't have access to your manufacturing strategy.
+</Callout>
+
+## How sharing works
+
+When a job hits `completed`, the system:
+
+1. Renders the PDF server-side with React-PDF
+2. Uploads to Supabase Storage in a non-public bucket
+3. Generates a signed URL with a 1-year expiry
+4. Sends the customer an email containing the URL (if `customer_email` is set)
+5. Stores the URL on `jobs.customer_pdf_url`
+
+Customers visit the URL — no login required. The path is UUID-based and not crawlable. If you want the URL revoked, an admin can rotate it; the old URL stops resolving immediately.
+
+## Branding
+
+`/dashboard/admin/branding` controls:
+
+- Logo (PNG or SVG, recommended 400×120 px)
+- Footer text (your business address, support email, terms link)
+- Accent color (used on the header strip and signature line)
+- Font (system stack default; custom fonts available on Pro+)
+
+Branding changes apply to PDFs generated after the change. Existing PDFs stay as-rendered.
+
+## Why no separate CRM table
+
+Customer info lives inline on the `jobs` table (`customer_name`, `customer_email`, `customer_phone`, `customer_notes`). There is intentionally **no separate `customers` table** in Standard / Pro tiers.
+
+Reason: most rubber-roll fabricators are job-shops. Customer relationships are episodic. The cost of a real CRM (contacts + accounts + deals + activities) outweighs the benefit when you're billing per-job.
+
+The Max tier adds a real CRM with contacts, accounts, and a sales pipeline, for shops where customer-account management is its own discipline.
+
+## See also
+
+- [Job lifecycle](/jobs/lifecycle)
+- [Operator assignment](/jobs/operator-assignment)
+- [Security data handling](/security/data-handling) — how signed URLs work

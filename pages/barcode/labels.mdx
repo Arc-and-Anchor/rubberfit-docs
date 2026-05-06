@@ -1,0 +1,60 @@
+---
+title: Barcode labels
+description: "Roll labels printed at receiving, job barcodes generated on creation. Code 128 with UUID payloads."
+---
+
+import { Callout } from 'nextra/components'
+
+# Barcode labels
+
+Two barcoded entities in Rubberfit: rolls and jobs. Both use **Code 128** with a UUID payload.
+
+## Roll labels
+
+Generated automatically when a roll is created (PO receipt or manual entry). The label PDF includes:
+
+- The Code 128 barcode (1.5 in wide × 0.5 in tall, sized for thermal printers)
+- The roll's UUID (human-readable, in case the barcode is damaged)
+- Material name + durometer
+- Dimensions (`width × length`)
+- Supplier name + lot number (if available)
+- Received date
+
+Print to a Zebra ZD420 (or similar thermal label printer) at 300 dpi. The dashboard print dialog includes a "Print to default label printer" option that bypasses the standard browser print preview for speed.
+
+## Job barcodes
+
+Generated when a job is created. Used in two places:
+
+1. **Operator scan-to-load** at the cut table (`/dashboard/scan` resolves any barcode and routes to the correct screen)
+2. **Customer pickup** — the [customer PDF](/jobs/customer-pdfs) includes the job barcode for warehouse/shipping reference
+
+Job barcodes are printed on the cut list (which also includes the operator-readable layout) when **Print cut list** is clicked.
+
+## The barcode payload
+
+Both roll and job barcodes carry the entity's UUID directly — not a short code, not a ticket number. This means:
+
+- A scanner is the lookup key — no operator typing
+- Wrong-roll cuts are physically impossible (the scanned barcode either resolves to a roll or it doesn't)
+- Lineage queries work directly off the scan event
+
+## Label printer setup
+
+Workspace admins configure the label printer in `/dashboard/admin/printers`. The system supports any printer with a 4×6 in label or 1×2 in label profile. Recommended:
+
+- **Zebra ZD420** (thermal direct, ~$400, 300 dpi)
+- **Brother QL-820NWB** (thermal direct, ~$200, 300 dpi)
+- **Dymo LabelWriter 4XL** (thermal direct, ~$300, 300 dpi)
+
+Higher-end laser/inkjet works but is overkill for label print volume.
+
+<Callout type="info">
+The barcodes encode UUIDs as base64 to keep Code 128 width manageable. The dashboard reverses the encoding on scan; operators never see the encoded form.
+</Callout>
+
+## See also
+
+- [Scanning](/barcode/scanning)
+- [Rolls](/inventory/rolls)
+- [Job lifecycle](/jobs/lifecycle)

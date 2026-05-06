@@ -1,0 +1,90 @@
+---
+title: Rolls
+description: "Rolls are the primary inventory unit — how they enter the system, how they get cut, and how they retire."
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Rolls
+
+A roll is the primary inventory unit in Rubberfit. Every cut consumes area from a specific roll, every offcut points back to its parent, and every audit trail starts at a `roll_id`.
+
+## The roll record
+
+The `inventory.rolls` table backs every roll. Key columns:
+
+| Column | Notes |
+|---|---|
+| `id` | UUID, primary key |
+| `barcode` | UUID (separate from `id`) — what gets printed on the label |
+| `material_id` | FK to `inventory.materials` |
+| `supplier_id` | FK to `inventory.suppliers` (nullable for legacy stock) |
+| `lot_number` | Optional supplier-assigned lot |
+| `usable_width_mm` / `usable_length_mm` | Effective dimensions after kerf and edge trim |
+| `remaining_area_mm2` | Live; decremented on every commit |
+| `received_at` | UTC timestamp |
+| `status` | `active` / `retired` / `quarantine` |
+
+## Lifecycle
+
+<Steps>
+
+### Receive
+
+A roll enters the system one of two ways:
+
+1. **Manual entry** — `/dashboard/inventory/rolls/new`. Used for legacy stock or rolls that bypassed PO workflow.
+2. **PO receipt** — when a [purchase order](/inventory/purchase-orders) line is marked received, the system creates one or more roll records automatically. This is the recommended path.
+
+On creation the system prints a [barcode label](/barcode/labels) that gets stuck on the physical roll.
+
+### Active
+
+A roll in `status = active` is eligible for assignment to jobs. The engine queries this table when sizing offcut bank vs. fresh-roll-needed decisions.
+
+### Cut
+
+Every commit against a roll:
+- Inserts a row into `cut_history` with `roll_id`
+- Decrements `roll.remaining_area_mm2`
+- Generates offcut records (see [offcuts](/inventory/offcuts))
+
+### Retire
+
+When `remaining_area_mm2` falls below the offcut threshold, the roll is automatically transitioned to `status = retired`. Retired rolls don't appear in the cut queue.
+
+### Quarantine
+
+Operators can manually transition a roll to `quarantine` if they spot a defect. Quarantined rolls hold their `remaining_area` but are excluded from job assignment until a manager unblocks them.
+
+</Steps>
+
+## Lineage
+
+Every roll's lineage is queryable:
+
+```sql
+-- All cuts on a specific roll
+SELECT * FROM cut_history WHERE roll_id = $1 ORDER BY created_at;
+
+-- All offcuts spawned from a roll
+SELECT * FROM offcuts WHERE parent_roll_id = $1;
+
+-- The PO that brought this roll in
+SELECT po.* FROM purchase_orders po
+JOIN purchase_order_items poi ON poi.purchase_order_id = po.id
+WHERE poi.created_roll_ids @> ARRAY[$1::uuid];
+```
+
+This lineage is what makes audit defensible — you can answer "which customer order consumed which physical roll" with a single join.
+
+<Callout type="info">
+Rolls are immutable once created. Adjustments to dimensions or material require an admin action that writes to `audit_log` with before/after JSONB snapshots.
+</Callout>
+
+## See also
+
+- [Offcuts](/inventory/offcuts) — first-class reusable inventory
+- [Reorder rules](/inventory/reorder-rules) — auto-trigger POs before stock-out
+- [Purchase orders](/inventory/purchase-orders) — how rolls enter
+- [Cut history](/audit-history/cut-history) — the per-cut record
