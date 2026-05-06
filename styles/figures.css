@@ -1,41 +1,184 @@
 /* ============================================================
-   Inline doc figures — body-page graphics paired with prose
+   Body-page figures — labeled SVG schematics with captions
    ============================================================ */
 
-.figure-shell {
-  margin: 32px 0;
-  padding: 24px;
-  border: 1px solid rgba(20, 23, 27, 0.08);
-  border-radius: 6px;
-  background: rgba(20, 23, 27, 0.02);
+.figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 32px auto 28px;
+  padding: 0;
+  max-width: 720px;
   color: #14171b;
 }
 
-:global(.dark) .figure-shell,
-.dark .figure-shell {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(246, 245, 242, 0.02);
+:global(.dark) .figure,
+.dark .figure {
   color: #f6f5f2;
+}
+
+.figure-narrow {
+  max-width: 320px;
 }
 
 .figure-svg {
   width: 100%;
   height: auto;
-  max-width: 720px;
-  margin: 0 auto;
-  display: block;
   overflow: visible;
+  display: block;
 }
 
-/* sr-only — accessible captions only */
-.figure-shell figcaption.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+.figure-caption {
+  margin-top: 14px;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: rgba(20, 23, 27, 0.55);
+  text-align: center;
+  max-width: 600px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+}
+
+:global(.dark) .figure-caption,
+.dark .figure-caption {
+  color: rgba(246, 245, 242, 0.5);
+}
+
+.figure-caption-num {
+  flex: 0 0 auto;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 11px;
+  color: #ee5a24;
+}
+
+/* ============================================================
+   Next Steps cards — wayfinding grid w/ bespoke icons
+   ============================================================ */
+
+.next-steps-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin: 36px 0 24px;
+}
+
+@media (min-width: 720px) {
+  .next-steps-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+}
+
+.next-steps-card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 20px 22px;
+  border: 1px solid rgba(20, 23, 27, 0.1);
+  border-radius: 6px;
+  background: rgba(246, 245, 242, 0.6);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 220ms ease-out,
+    background-color 220ms ease-out,
+    transform 220ms ease-out;
+}
+
+.next-steps-card:hover {
+  border-color: rgba(238, 90, 36, 0.4);
+  background-color: rgba(238, 90, 36, 0.03);
+  transform: translateY(-1px);
+}
+
+.next-steps-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(238, 90, 36, 0.5);
+}
+
+:global(.dark) .next-steps-card,
+.dark .next-steps-card {
+  border-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(20, 23, 27, 0.5);
+}
+
+:global(.dark) .next-steps-card:hover,
+.dark .next-steps-card:hover {
+  border-color: rgba(238, 90, 36, 0.4);
+  background-color: rgba(238, 90, 36, 0.04);
+}
+
+.next-steps-icon {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ee5a24;
+  margin-top: 2px;
+  transition: transform 240ms ease-out;
+}
+
+.next-steps-card:hover .next-steps-icon {
+  transform: translateY(-1px) rotate(-2deg);
+}
+
+.next-steps-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.next-steps-title {
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: #14171b;
+}
+
+:global(.dark) .next-steps-title,
+.dark .next-steps-title {
+  color: #f6f5f2;
+}
+
+.next-steps-desc {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(20, 23, 27, 0.6);
+}
+
+:global(.dark) .next-steps-desc,
+.dark .next-steps-desc {
+  color: rgba(246, 245, 242, 0.6);
+}
+
+.next-steps-arrow {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #ee5a24;
+}
+
+.next-steps-arrow svg {
+  transition: transform 220ms ease-out;
+}
+
+.next-steps-card:hover .next-steps-arrow svg {
+  transform: translateX(3px);
 }

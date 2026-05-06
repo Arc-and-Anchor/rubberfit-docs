@@ -10,8 +10,6 @@ import { LinkFlow } from '../../components/figures'
 
 Every job ships with a customer-facing PDF. It is intentionally minimal — your customer doesn't need to see your operator notes, your cut layouts, or your yield percentage. They need to see what they ordered, when it ships, and how to find it.
 
-<LinkFlow label="PDF generated, signed with a short-lived URL, and verified at the customer end" />
-
 ## What's in the PDF
 
 - Job number + customer barcode (used for pickup or shipping reference)
@@ -48,6 +46,11 @@ When a job hits `completed`, the system:
 5. Stores the URL on `jobs.customer_pdf_url`
 
 Customers visit the URL — no login required. The path is UUID-based and not crawlable. If you want the URL revoked, an admin can rotate it; the old URL stops resolving immediately.
+
+<LinkFlow
+  captionNumber="Fig. 1"
+  caption="Server-rendered PDF → short-lived signed URL → customer opens. The link expires after the configured TTL."
+/>
 
 ## Branding
 

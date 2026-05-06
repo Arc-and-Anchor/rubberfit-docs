@@ -11,9 +11,14 @@ import { DiamondTrack } from '../../components/figures'
 We are not SOC 2 certified. We are working toward it. This page is the unvarnished version of the path — every item below maps to a control or process we either have not shipped, or have shipped partially.
 
 <DiamondTrack
-  marks={["Q1", "Q2", "Q3", "Q4"]}
-  activeIndex={0}
-  label="Quarterly milestone track from Q1 hardening through Q4 SOC 2 Type II observation"
+  milestones={[
+    { quarter: "Q1", headline: "Hardening", type: "current" },
+    { quarter: "Q2", headline: "Audit + policy", type: "future" },
+    { quarter: "Q3", headline: "Pen test + Type I", type: "future" },
+    { quarter: "Q4", headline: "Type II begins", type: "future" },
+  ]}
+  captionNumber="Fig. 1"
+  caption="Four quarters from current posture to Type II observation start. Items shift right when they ship."
 />
 
 <Callout>

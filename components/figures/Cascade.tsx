@@ -1,111 +1,161 @@
 "use client"
 
-import { motion, type Variants } from "framer-motion"
+import { motion } from "framer-motion"
+import { FIGURE_FONT, FIGURE_TOKENS } from "./figure-tokens"
+import { Caption } from "./Caption"
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.18, delayChildren: 0.1 } },
+type Child = {
+  label: string
+  width: number
 }
 
-const parentVariants: Variants = {
-  hidden: { y: -10, opacity: 0 },
-  show: { y: 0, opacity: 1, transition: { duration: 0.4 } },
-}
+const PARENT_H = 40
+const CHILD_H = 36
+const TOP_Y = 8
+const BUS_Y = TOP_Y + PARENT_H + 22
+const CHILD_Y = BUS_Y + 22
+const CHILD_GAP = 16
+const SIDE_PAD = 24
 
-const lineVariants: Variants = {
-  hidden: { pathLength: 0, opacity: 0 },
-  show: { pathLength: 1, opacity: 0.35, transition: { duration: 0.6 } },
-}
+export function Cascade({
+  parentLabel,
+  children,
+  caption,
+  captionNumber,
+}: {
+  parentLabel: string
+  children: Child[]
+  caption?: React.ReactNode
+  captionNumber?: string
+}) {
+  if (children.length === 0) return null
+  const totalChildW =
+    children.reduce((acc, c) => acc + c.width, 0) +
+    Math.max(0, children.length - 1) * CHILD_GAP
+  const totalW = totalChildW + SIDE_PAD * 2
+  const totalH = CHILD_Y + CHILD_H + 8
 
-const childVariants: Variants = {
-  hidden: { scale: 0.85, y: 10, opacity: 0 },
-  show: {
-    scale: 1,
-    y: 0,
-    opacity: 1,
-    transition: { type: "spring", stiffness: 280, damping: 20 },
-  },
-}
+  let cursor = SIDE_PAD
+  const childPositions = children.map((c) => {
+    const x = cursor
+    cursor += c.width + CHILD_GAP
+    return { x, w: c.width }
+  })
+  const childCenters = childPositions.map((p) => p.x + p.w / 2)
+  const parentW = Math.min(280, totalW * 0.55)
+  const parentX = (totalW - parentW) / 2
 
-export function Cascade({ label }: { label: string }) {
   return (
-    <figure aria-label={label} className="figure-shell">
+    <figure className="figure">
       <motion.svg
-        viewBox="0 0 400 140"
-        fill="none"
+        viewBox={`0 0 ${totalW} ${totalH}`}
         className="figure-svg"
         initial="hidden"
-        whileInView="show"
+        whileInView="visible"
         viewport={{ once: true, margin: "-80px" }}
-        variants={containerVariants}
       >
-        <motion.rect
-          x={120}
-          y={10}
-          width={160}
-          height={40}
-          rx={3}
-          stroke="currentColor"
-          strokeWidth={2}
-          fill="transparent"
-          variants={parentVariants}
-        />
-        <motion.path
-          d="M65 80 v-15 h135 v15 M200 80 v15 M315 80 v-15 h17 v15"
-          stroke="currentColor"
-          strokeWidth={1.5}
-          opacity={0.3}
-          fill="none"
-          variants={lineVariants}
-        />
-        <motion.rect
-          x={20}
-          y={95}
-          width={90}
-          height={30}
-          rx={3}
-          stroke="#ee5a24"
-          strokeWidth={2}
-          fill="transparent"
-          variants={childVariants}
-        />
-        <motion.rect
-          x={125}
-          y={95}
-          width={70}
-          height={30}
-          rx={3}
-          stroke="#ee5a24"
-          strokeWidth={2}
-          fill="transparent"
-          variants={childVariants}
-        />
-        <motion.rect
-          x={210}
-          y={95}
-          width={60}
-          height={30}
-          rx={3}
-          stroke="#ee5a24"
-          strokeWidth={2}
-          fill="transparent"
-          variants={childVariants}
-        />
-        <motion.rect
-          x={285}
-          y={95}
-          width={95}
-          height={30}
-          rx={3}
-          stroke="#ee5a24"
-          strokeWidth={2}
-          fill="transparent"
-          variants={childVariants}
-        />
+        <motion.g
+          variants={{
+            hidden: { opacity: 0, y: -6 },
+            visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+          }}
+        >
+          <rect
+            x={parentX}
+            y={TOP_Y}
+            width={parentW}
+            height={PARENT_H}
+            rx={4}
+            fill={FIGURE_TOKENS.parent.fill}
+            stroke={FIGURE_TOKENS.parent.stroke}
+            strokeWidth={2}
+          />
+          <text
+            x={totalW / 2}
+            y={TOP_Y + PARENT_H / 2}
+            fontFamily={FIGURE_FONT}
+            fontSize={12}
+            fontWeight={500}
+            fill={FIGURE_TOKENS.parent.label}
+            dominantBaseline="middle"
+            textAnchor="middle"
+          >
+            {parentLabel}
+          </text>
+        </motion.g>
+        <motion.g
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1, transition: { delay: 0.2, duration: 0.5 } },
+          }}
+        >
+          <line
+            x1={totalW / 2}
+            y1={TOP_Y + PARENT_H}
+            x2={totalW / 2}
+            y2={BUS_Y}
+            stroke={FIGURE_TOKENS.connector}
+            strokeWidth={2}
+          />
+          <line
+            x1={childCenters[0]}
+            y1={BUS_Y}
+            x2={childCenters[childCenters.length - 1]}
+            y2={BUS_Y}
+            stroke={FIGURE_TOKENS.connector}
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+          {childCenters.map((cx, i) => (
+            <line
+              key={`drop-${i}`}
+              x1={cx}
+              y1={BUS_Y}
+              x2={cx}
+              y2={CHILD_Y}
+              stroke={FIGURE_TOKENS.connector}
+              strokeWidth={2}
+            />
+          ))}
+        </motion.g>
+        {children.map((child, i) => (
+          <motion.g
+            key={child.label}
+            variants={{
+              hidden: { opacity: 0, y: 8 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                transition: { delay: 0.32 + i * 0.07, duration: 0.4 },
+              },
+            }}
+          >
+            <rect
+              x={childPositions[i].x}
+              y={CHILD_Y}
+              width={child.width}
+              height={CHILD_H}
+              rx={4}
+              fill={FIGURE_TOKENS.child.fill}
+              stroke={FIGURE_TOKENS.child.stroke}
+              strokeWidth={1.5}
+            />
+            <text
+              x={childCenters[i]}
+              y={CHILD_Y + CHILD_H / 2}
+              fontFamily={FIGURE_FONT}
+              fontSize={11}
+              fontWeight={500}
+              fill={FIGURE_TOKENS.child.label}
+              dominantBaseline="middle"
+              textAnchor="middle"
+            >
+              {child.label}
+            </text>
+          </motion.g>
+        ))}
       </motion.svg>
-      <figcaption className="sr-only">
-        A parent roll fragmenting into four child offcuts of varying sizes.
-      </figcaption>
+      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
     </figure>
   )
 }

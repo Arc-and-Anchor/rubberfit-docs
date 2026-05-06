@@ -1,88 +1,119 @@
 "use client"
 
-import { motion, type Variants } from "framer-motion"
+import { motion } from "framer-motion"
+import { FIGURE_FONT, FIGURE_TOKENS } from "./figure-tokens"
+import { Caption } from "./Caption"
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+type Stage = {
+  index: string
+  name: string
+  active?: boolean
 }
 
-const chamberVariants: Variants = {
-  hidden: { scaleY: 0, opacity: 0, originY: 1 },
-  show: { scaleY: 1, opacity: 1, transition: { duration: 0.35 } },
-}
+const BAR_W = 220
+const BAR_H = 36
+const GAP = 12
+const START_X = 24
+const NUM_X = START_X + 14
+const NAME_X = START_X + 50
 
-const heatVariants: Variants = {
-  hidden: { x: 10, opacity: 0 },
-  show: {
-    x: [10, 80, 150, 220, 290, 360, 430],
-    opacity: [0, 1, 1, 1, 1, 1, 0],
-    transition: { duration: 2.6, ease: "linear", repeat: Infinity, repeatDelay: 0.6 },
-  },
-}
+export function Pipeline({
+  stages,
+  caption,
+  captionNumber,
+}: {
+  stages: Stage[]
+  caption?: React.ReactNode
+  captionNumber?: string
+}) {
+  const totalH = stages.length * BAR_H + (stages.length - 1) * GAP + 4
+  const totalW = BAR_W + START_X * 2
 
-export function Pipeline({ stages, label }: { stages: string[]; label: string }) {
   return (
-    <figure aria-label={label} className="figure-shell">
+    <figure className="figure figure-narrow">
       <motion.svg
-        viewBox="0 0 520 90"
-        fill="none"
+        viewBox={`0 0 ${totalW} ${totalH}`}
         className="figure-svg"
         initial="hidden"
-        whileInView="show"
+        whileInView="visible"
         viewport={{ once: true, margin: "-80px" }}
-        variants={containerVariants}
       >
-        {stages.map((_, i) => {
-          const x = 10 + i * 70
+        {stages.slice(0, -1).map((_, i) => (
+          <motion.line
+            key={`c-${i}`}
+            x1={START_X + BAR_W / 2}
+            y1={(i + 1) * BAR_H + i * GAP}
+            x2={START_X + BAR_W / 2}
+            y2={(i + 1) * (BAR_H + GAP)}
+            stroke={FIGURE_TOKENS.connector}
+            strokeWidth={2}
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { delay: i * 0.06 + 0.2, duration: 0.3 },
+              },
+            }}
+          />
+        ))}
+        {stages.map((s, i) => {
+          const y = i * (BAR_H + GAP)
+          const isActive = !!s.active
+          const stroke = isActive ? FIGURE_TOKENS.current.stroke : FIGURE_TOKENS.past.stroke
+          const fill = isActive ? FIGURE_TOKENS.current.fill : "transparent"
+          const numColor = isActive ? FIGURE_TOKENS.current.label : "rgba(246,245,242,0.5)"
+          const nameColor = isActive ? FIGURE_TOKENS.current.label : FIGURE_TOKENS.past.label
           return (
-            <motion.rect
-              key={i}
-              x={x}
-              y={30}
-              width={60}
-              height={40}
-              rx={2}
-              stroke="currentColor"
-              strokeWidth={2}
-              fill="transparent"
-              variants={chamberVariants}
-            />
+            <motion.g
+              key={s.name}
+              variants={{
+                hidden: { opacity: 0, x: -8 },
+                visible: {
+                  opacity: 1,
+                  x: 0,
+                  transition: { delay: i * 0.06, duration: 0.4 },
+                },
+              }}
+            >
+              <rect
+                x={START_X}
+                y={y}
+                width={BAR_W}
+                height={BAR_H}
+                rx={4}
+                fill={fill}
+                stroke={stroke}
+                strokeWidth={isActive ? 2 : 1.5}
+              />
+              <text
+                x={NUM_X}
+                y={y + BAR_H / 2}
+                fontFamily={FIGURE_FONT}
+                fontSize={11}
+                fontWeight={500}
+                fill={numColor}
+                dominantBaseline="middle"
+                textAnchor="start"
+              >
+                {s.index}
+              </text>
+              <text
+                x={NAME_X}
+                y={y + BAR_H / 2}
+                fontFamily={FIGURE_FONT}
+                fontSize={12}
+                fontWeight={500}
+                fill={nameColor}
+                dominantBaseline="middle"
+                textAnchor="start"
+              >
+                {s.name}
+              </text>
+            </motion.g>
           )
         })}
-        {stages.slice(0, -1).map((_, i) => {
-          const x1 = 70 + i * 70
-          return (
-            <line
-              key={i}
-              x1={x1}
-              y1={50}
-              x2={x1 + 10}
-              y2={50}
-              stroke="currentColor"
-              strokeWidth={2}
-              opacity={0.3}
-            />
-          )
-        })}
-        <path
-          d="M430 50 h30 M455 50 l-6 -6 M455 50 l-6 6"
-          stroke="#ee5a24"
-          strokeWidth={2}
-        />
-        <motion.rect
-          x={0}
-          y={47}
-          width={20}
-          height={6}
-          rx={3}
-          fill="#ee5a24"
-          variants={heatVariants}
-        />
       </motion.svg>
-      <figcaption className="sr-only">
-        {stages.map((s, i) => `${i + 1}. ${s}`).join(", ")}
-      </figcaption>
+      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
     </figure>
   )
 }

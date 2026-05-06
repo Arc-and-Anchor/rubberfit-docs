@@ -3,8 +3,15 @@ title: Quickstart
 description: "From signup to first cut in under fifteen minutes."
 ---
 
-import { Callout, Steps, Cards } from 'nextra/components'
-import { StepRail } from '../../components/figures'
+import { Callout, Steps } from 'nextra/components'
+import {
+  StepRail,
+  NextStepsCards,
+  IconOperatorRoles,
+  IconReorderRules,
+  IconFreeRoam,
+  IconBrandedPDF,
+} from '../../components/figures'
 
 # Quickstart
 
@@ -16,7 +23,9 @@ This walkthrough gets you from a fresh signup to a finished cut in under fifteen
 
 <StepRail
   steps={["Sign up", "Receive roll", "Create job", "Run Auto Nest", "Cut + ship"]}
-  label="Five-step onboarding rail from sign-up to first cut shipped"
+  activeIndex={0}
+  captionNumber="Fig. 1"
+  caption="Five steps end to end — sign-up to shipped cut, in under fifteen minutes."
 />
 
 <Steps>
@@ -57,17 +66,31 @@ In the background:
 
 ## Next steps
 
-<Cards num={2}>
-  <Cards.Card title="Configure operator roles" href="/roles-rbac/the-six-roles">
-    Six roles, enforced at the database. Map them to your team.
-  </Cards.Card>
-  <Cards.Card title="Set reorder rules" href="/inventory/reorder-rules">
-    Per-material thresholds + preferred suppliers. Auto-draft POs when stock crosses the line.
-  </Cards.Card>
-  <Cards.Card title="Free-roam mode" href="/cutting-engine/free-roam">
-    When the spec needs manual placement, switch modes without losing the audit trail.
-  </Cards.Card>
-  <Cards.Card title="Branded customer PDFs" href="/jobs/customer-pdfs">
-    Customize the customer-facing receipt — logo, terms, support contact.
-  </Cards.Card>
-</Cards>
+<NextStepsCards
+  items={[
+    {
+      title: "Configure operator roles",
+      description: "Six roles, enforced at the database. Map them to your team.",
+      href: "/roles-rbac/the-six-roles",
+      icon: <IconOperatorRoles />,
+    },
+    {
+      title: "Set reorder rules",
+      description: "Per-material thresholds plus preferred suppliers — auto-draft POs when stock crosses the line.",
+      href: "/inventory/reorder-rules",
+      icon: <IconReorderRules />,
+    },
+    {
+      title: "Free-roam mode",
+      description: "When the spec needs manual placement, switch modes without losing the audit trail.",
+      href: "/cutting-engine/free-roam",
+      icon: <IconFreeRoam />,
+    },
+    {
+      title: "Branded customer PDFs",
+      description: "Customize the customer-facing receipt — logo, terms, support contact.",
+      href: "/jobs/customer-pdfs",
+      icon: <IconBrandedPDF />,
+    },
+  ]}
+/>
