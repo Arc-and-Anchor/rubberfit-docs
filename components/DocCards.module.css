@@ -1,0 +1,140 @@
+/* ============================================================
+   Doc cards — index.mdx wayfinding grid
+   ============================================================ */
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  max-width: 1024px;
+  margin: 32px auto 0;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    padding: 0 32px;
+  }
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid rgba(20, 23, 27, 0.1);
+  background: rgba(246, 245, 242, 0.6);
+  padding: 24px;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 300ms ease-out,
+    background-color 300ms ease-out,
+    transform 300ms ease-out;
+}
+
+.card:hover {
+  border-color: rgba(238, 90, 36, 0.3);
+  background-color: rgba(238, 90, 36, 0.02);
+  transform: translateY(-2px);
+}
+
+.card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(238, 90, 36, 0.5);
+}
+
+:global(.dark) .card {
+  border-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(20, 23, 27, 0.4);
+}
+
+:global(.dark) .card:hover {
+  border-color: rgba(238, 90, 36, 0.3);
+}
+
+.visual {
+  height: 140px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: #14171b;
+}
+
+:global(.dark) .visual {
+  color: #f6f5f2;
+}
+
+.visual svg {
+  height: 100%;
+  width: auto;
+  overflow: visible;
+}
+
+.body {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.eyebrow {
+  font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ee5a24;
+}
+
+.title {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: #14171b;
+}
+
+:global(.dark) .title {
+  color: #f6f5f2;
+}
+
+.descr {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(20, 23, 27, 0.6);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+:global(.dark) .descr {
+  color: rgba(246, 245, 242, 0.6);
+}
+
+.arrow {
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ee5a24;
+}
+
+.arrow svg {
+  margin-left: 4px;
+  height: 16px;
+  width: 16px;
+  transition: transform 300ms ease-out;
+}
+
+.card:hover .arrow svg {
+  transform: translateX(4px);
+}

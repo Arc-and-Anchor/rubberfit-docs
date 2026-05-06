@@ -3,7 +3,8 @@ title: Introduction
 description: "Rubberfit is a manufacturing operations platform for rubber-roll fabricators. A Rust nesting engine, full inventory, jobs, audit, and barcode workflow — in one product."
 ---
 
-import { Callout, Cards } from 'nextra/components'
+import { Callout } from 'nextra/components'
+import { DocCards } from '../components/DocCards'
 
 # Rubberfit
 
@@ -11,20 +12,7 @@ Rubberfit is a manufacturing operations platform built specifically for rubber-r
 
 It is one product, one bill, one source of truth — replacing the typical stack of a CAD nesting plugin (ProNest, SigmaNEST) plus a generic MRP (Plex, Epicor, E2) plus a CRM bolt-on.
 
-<Cards num={2}>
-  <Cards.Card title="Quickstart" href="/getting-started/quickstart">
-    Sign up, scan your first roll in, run a Pack, and ship the cut — under 15 minutes.
-  </Cards.Card>
-  <Cards.Card title="The cutting engine" href="/cutting-engine/overview">
-    How Auto Nest and Free-roam work, and what the Rust engine does under the hood.
-  </Cards.Card>
-  <Cards.Card title="Inventory model" href="/inventory/rolls">
-    Roll lineage, offcuts as first-class inventory, reorder rules, suppliers, POs.
-  </Cards.Card>
-  <Cards.Card title="Security posture" href="/security/posture">
-    What's shipped today (RLS, six-role RBAC, audit log) and the roadmap to SOC 2.
-  </Cards.Card>
-</Cards>
+<DocCards />
 
 ## What Rubberfit is
 
