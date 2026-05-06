@@ -4,6 +4,7 @@ description: "Assign jobs to operators, surface their queues, and route notifica
 ---
 
 import { Callout } from 'nextra/components'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Operator assignment
 
@@ -64,8 +65,10 @@ This means a rush job created today sorts above a normal job due tomorrow. Tunab
 
 On Max tier, managers can view assignment across multiple shops. The queue at `/dashboard/jobs/queue?scope=org` shows every operator's load, sorted by who has the most pending parts. Useful for rebalancing when one shop gets backed up.
 
-## See also
-
-- [Job lifecycle](/jobs/lifecycle)
-- [Customer PDFs](/jobs/customer-pdfs)
-- [The six roles](/roles-rbac/the-six-roles)
+<SeeAlso
+  links={[
+    { title: "Job lifecycle", href: "/jobs/lifecycle" },
+    { title: "Customer PDFs", href: "/jobs/customer-pdfs" },
+    { title: "The six roles", href: "/roles-rbac/the-six-roles" },
+  ]}
+/>

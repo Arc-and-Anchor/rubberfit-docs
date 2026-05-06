@@ -5,6 +5,7 @@ description: "Branded customer-facing job receipts, with internal artifacts (lay
 
 import { Callout } from 'nextra/components'
 import { LinkFlow } from '../../components/figures'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Customer PDFs
 
@@ -70,8 +71,10 @@ Reason: most rubber-roll fabricators are job-shops. Customer relationships are e
 
 The Max tier adds a real CRM with contacts, accounts, and a sales pipeline, for shops where customer-account management is its own discipline.
 
-## See also
-
-- [Job lifecycle](/jobs/lifecycle)
-- [Operator assignment](/jobs/operator-assignment)
-- [Security data handling](/security/data-handling) — how signed URLs work
+<SeeAlso
+  links={[
+    { title: "Job lifecycle", href: "/jobs/lifecycle" },
+    { title: "Operator assignment", href: "/jobs/operator-assignment" },
+    { title: "Security data handling", href: "/security/data-handling", blurb: "how signed URLs work" },
+  ]}
+/>

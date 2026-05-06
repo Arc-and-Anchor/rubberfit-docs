@@ -4,6 +4,7 @@ description: "admin.admin_activity_log captures admin-tier actions with actor, r
 ---
 
 import { Callout } from 'nextra/components'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Admin activity log
 
@@ -93,8 +94,10 @@ Rows are never auto-deleted. SOC 2 will require a documented retention policy; t
 Don't try to use this log as a general-purpose change-tracking table. The `resource_type` `CHECK` rejects rows that aren't admin-tier. Use database history extensions (e.g., `pgaudit`) or `cut_history` for broader use cases.
 </Callout>
 
-## See also
-
-- [Cut history](/audit-history/cut-history) — the per-cut record
-- [Security posture → Audit + observability](/security/posture#audit--observability)
-- [The six roles](/roles-rbac/the-six-roles)
+<SeeAlso
+  links={[
+    { title: "Cut history", href: "/audit-history/cut-history", blurb: "the per-cut record" },
+    { title: "Security posture → Audit + observability", href: "/security/posture#audit--observability" },
+    { title: "The six roles", href: "/roles-rbac/the-six-roles" },
+  ]}
+/>

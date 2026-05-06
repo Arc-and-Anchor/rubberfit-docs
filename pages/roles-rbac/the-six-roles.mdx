@@ -4,6 +4,7 @@ description: "admin, manager, supervisor, cutter, member, viewer — what each r
 ---
 
 import { Callout } from 'nextra/components'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # The six roles
 
@@ -48,8 +49,10 @@ Every role change writes to the admin activity log with the action type, actor, 
 There must always be at least one `admin` in a workspace. The dashboard prevents the last `admin` from demoting themselves; if you need to transfer ownership, promote a new `admin` first, then demote the old one.
 </Callout>
 
-## See also
-
-- [Permission matrix](/roles-rbac/permission-matrix) — exhaustive per-action breakdown
-- [Security posture → Authorization](/security/posture#authorization) — RLS as the last line of defense
-- [Admin audit log](/audit-history/admin-audit-log)
+<SeeAlso
+  links={[
+    { title: "Permission matrix", href: "/roles-rbac/permission-matrix", blurb: "exhaustive per-action breakdown" },
+    { title: "Security posture → Authorization", href: "/security/posture#authorization", blurb: "RLS as the last line of defense" },
+    { title: "Admin audit log", href: "/audit-history/admin-audit-log" },
+  ]}
+/>

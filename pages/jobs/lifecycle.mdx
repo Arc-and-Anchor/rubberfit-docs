@@ -5,6 +5,7 @@ description: "Five states from pending to shipped, the transitions between them,
 
 import { Callout, Steps } from 'nextra/components'
 import { StateMachine } from '../../components/figures'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Job lifecycle
 
@@ -102,8 +103,10 @@ The dashboard cut queue sorts by:
 
 A `rush` job with a far-future due date still sorts above a `normal` job with today's due date. This is intentional — operators should be able to see "what's the most urgent thing right now" without doing date math.
 
-## See also
-
-- [Customer PDFs](/jobs/customer-pdfs) — what customers see
-- [Operator assignment](/jobs/operator-assignment) — queues + notifications
-- [Cut history](/audit-history/cut-history)
+<SeeAlso
+  links={[
+    { title: "Customer PDFs", href: "/jobs/customer-pdfs", blurb: "what customers see" },
+    { title: "Operator assignment", href: "/jobs/operator-assignment", blurb: "queues + notifications" },
+    { title: "Cut history", href: "/audit-history/cut-history" },
+  ]}
+/>

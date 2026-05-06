@@ -5,6 +5,7 @@ description: "Offcuts are first-class inventory in Rubberfit. They retain parent
 
 import { Callout } from 'nextra/components'
 import { Cascade } from '../../components/figures'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Offcuts
 
@@ -81,7 +82,9 @@ The engine's offcut search ignores offcuts that are too irregular to fit any of 
 
 This is what makes offcut reuse defensible to a quality auditor: every offcut traces back to a roll, every consumed offcut traces back to a cut.
 
-## See also
-
-- [Rolls](/inventory/rolls) — parent stock
-- [Cut history](/audit-history/cut-history) — what produces offcuts
+<SeeAlso
+  links={[
+    { title: "Rolls", href: "/inventory/rolls", blurb: "parent stock" },
+    { title: "Cut history", href: "/audit-history/cut-history", blurb: "what produces offcuts" },
+  ]}
+/>

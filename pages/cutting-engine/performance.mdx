@@ -4,6 +4,7 @@ description: "Pack-time and yield benchmarks for the Rust + sparrow GLS pipeline
 ---
 
 import { Callout } from 'nextra/components'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Engine performance
 
@@ -52,8 +53,10 @@ Per-solve memory peaks around 80–120 MB for typical workloads. The 9 m² × 60
 If you see solves capped at 5 s on a complex job, the engine is leaving optimization on the table. Increase `max_solve_seconds` per-request via the API; production defaults to 5 to keep the operator experience snappy.
 </Callout>
 
-## See also
-
-- [Engine overview](/cutting-engine/overview)
-- [Auto Nest](/cutting-engine/auto-nest)
-- [Free-roam](/cutting-engine/free-roam)
+<SeeAlso
+  links={[
+    { title: "Engine overview", href: "/cutting-engine/overview" },
+    { title: "Auto Nest", href: "/cutting-engine/auto-nest" },
+    { title: "Free-roam", href: "/cutting-engine/free-roam" },
+  ]}
+/>

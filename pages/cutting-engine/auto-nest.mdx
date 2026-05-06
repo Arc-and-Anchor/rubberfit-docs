@@ -4,6 +4,7 @@ description: "Press Pack — the Rust engine returns an optimized layout in 1–
 ---
 
 import { Callout } from 'nextra/components'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Auto Nest
 
@@ -91,8 +92,10 @@ Pressing **Commit cut** in the UI sends `POST /api/cuts/commit` with the layout.
 The advisory lock prevents two operators from packing the same roll simultaneously. If you see "Roll locked" when trying to pack, another operator is mid-solve. Wait 30 seconds and try again.
 </Callout>
 
-## See also
-
-- [Free-roam](/cutting-engine/free-roam) — when manual placement beats Auto
-- [Performance](/cutting-engine/performance) — solve-time benchmarks
-- [Cut history](/audit-history/cut-history) — the `layout_json` archive
+<SeeAlso
+  links={[
+    { title: "Free-roam", href: "/cutting-engine/free-roam", blurb: "when manual placement beats Auto" },
+    { title: "Performance", href: "/cutting-engine/performance", blurb: "solve-time benchmarks" },
+    { title: "Cut history", href: "/audit-history/cut-history", blurb: "the `layout_json` archive" },
+  ]}
+/>

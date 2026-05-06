@@ -4,6 +4,7 @@ description: "Supplier records, materials they carry, lead times, and price hist
 ---
 
 import { Callout } from 'nextra/components'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Suppliers
 
@@ -56,7 +57,9 @@ Most general MFG SaaS treats suppliers as a contact-card lookup. Rubberfit treat
 Supplier records are soft-deleted (`status = inactive`) rather than dropped. Existing PO history and price-history rows keep their FK pointing at the inactive record so the audit trail stays intact.
 </Callout>
 
-## See also
-
-- [Purchase orders](/inventory/purchase-orders)
-- [Reorder rules](/inventory/reorder-rules)
+<SeeAlso
+  links={[
+    { title: "Purchase orders", href: "/inventory/purchase-orders" },
+    { title: "Reorder rules", href: "/inventory/reorder-rules" },
+  ]}
+/>
