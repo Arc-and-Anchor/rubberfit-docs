@@ -13,14 +13,12 @@ type LinearProps = {
   layout: "linear"
   states: State[]
   caption?: React.ReactNode
-  captionNumber?: string
 }
 
 type VerticalProps = {
   layout: "vertical"
   states: State[]
   caption?: React.ReactNode
-  captionNumber?: string
 }
 
 type BranchingProps = {
@@ -29,7 +27,6 @@ type BranchingProps = {
   branchAfterIndex: number
   branchLabel: string
   caption?: React.ReactNode
-  captionNumber?: string
 }
 
 export type StateMachineProps = LinearProps | VerticalProps | BranchingProps
@@ -61,7 +58,7 @@ export function StateMachine(props: StateMachineProps) {
   return <Linear {...props} />
 }
 
-function Linear({ states, caption, captionNumber }: LinearProps) {
+function Linear({ states, caption }: LinearProps) {
   const totalW = states.length * LINEAR_NODE_W + (states.length - 1) * LINEAR_GAP
   const totalH = LINEAR_NODE_H + 4
 
@@ -138,12 +135,12 @@ function Linear({ states, caption, captionNumber }: LinearProps) {
           )
         })}
       </motion.svg>
-      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
+      {caption ? <Caption>{caption}</Caption> : null}
     </figure>
   )
 }
 
-function Vertical({ states, caption, captionNumber }: VerticalProps) {
+function Vertical({ states, caption }: VerticalProps) {
   const totalH =
     states.length * VERTICAL_NODE_H + (states.length - 1) * VERTICAL_GAP + 4
   const totalW = VERTICAL_NODE_W + 8
@@ -222,7 +219,7 @@ function Vertical({ states, caption, captionNumber }: VerticalProps) {
           )
         })}
       </motion.svg>
-      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
+      {caption ? <Caption>{caption}</Caption> : null}
     </figure>
   )
 }
@@ -232,7 +229,6 @@ function Branching({
   branchAfterIndex,
   branchLabel,
   caption,
-  captionNumber,
 }: BranchingProps) {
   const totalW =
     states.length * BRANCHING_NODE_W + (states.length - 1) * BRANCHING_GAP
@@ -362,7 +358,7 @@ function Branching({
           </text>
         </motion.g>
       </motion.svg>
-      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
+      {caption ? <Caption>{caption}</Caption> : null}
     </figure>
   )
 }

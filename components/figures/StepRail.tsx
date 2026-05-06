@@ -20,12 +20,10 @@ export function StepRail({
   steps,
   activeIndex = 0,
   caption,
-  captionNumber,
 }: {
   steps: string[]
   activeIndex?: number
   caption?: React.ReactNode
-  captionNumber?: string
 }) {
   const safeIndex = Math.max(0, Math.min(activeIndex, steps.length - 1))
   const COL_W = 110
@@ -109,7 +107,7 @@ export function StepRail({
           )
         })}
       </motion.svg>
-      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
+      {caption ? <Caption>{caption}</Caption> : null}
     </figure>
   )
 }

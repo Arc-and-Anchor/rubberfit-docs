@@ -20,11 +20,9 @@ const NAME_X = START_X + 50
 export function Pipeline({
   stages,
   caption,
-  captionNumber,
 }: {
   stages: Stage[]
   caption?: React.ReactNode
-  captionNumber?: string
 }) {
   const totalH = stages.length * BAR_H + (stages.length - 1) * GAP + 4
   const totalW = BAR_W + START_X * 2
@@ -113,7 +111,7 @@ export function Pipeline({
           )
         })}
       </motion.svg>
-      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
+      {caption ? <Caption>{caption}</Caption> : null}
     </figure>
   )
 }

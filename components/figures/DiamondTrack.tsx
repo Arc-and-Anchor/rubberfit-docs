@@ -18,11 +18,9 @@ const HALF = 14
 export function DiamondTrack({
   milestones,
   caption,
-  captionNumber,
 }: {
   milestones: Milestone[]
   caption?: React.ReactNode
-  captionNumber?: string
 }) {
   const totalW = SIDE_PAD * 2 + (milestones.length - 1) * COL_W
   const totalH = ROW_Y + 80
@@ -105,7 +103,7 @@ export function DiamondTrack({
           )
         })}
       </motion.svg>
-      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
+      {caption ? <Caption>{caption}</Caption> : null}
     </figure>
   )
 }

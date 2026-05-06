@@ -33,28 +33,16 @@
   font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
   font-size: 12px;
   font-weight: 500;
-  line-height: 1.45;
+  line-height: 1.5;
   letter-spacing: 0.01em;
   color: rgba(20, 23, 27, 0.55);
   text-align: center;
   max-width: 600px;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 10px;
 }
 
 :global(.dark) .figure-caption,
 .dark .figure-caption {
   color: rgba(246, 245, 242, 0.5);
-}
-
-.figure-caption-num {
-  flex: 0 0 auto;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 11px;
-  color: #ee5a24;
 }
 
 /* ============================================================
@@ -181,4 +169,193 @@
 
 .next-steps-card:hover .next-steps-arrow svg {
   transform: translateX(3px);
+}
+
+/* ============================================================
+   BuiltByCard — credit / studio block
+   ============================================================ */
+
+.builtby-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin: 36px 0 12px;
+  padding: 24px 26px;
+  border: 1px solid rgba(20, 23, 27, 0.1);
+  border-radius: 8px;
+  background:
+    radial-gradient(
+      ellipse at top right,
+      rgba(238, 90, 36, 0.06),
+      transparent 60%
+    ),
+    rgba(246, 245, 242, 0.6);
+  color: #14171b;
+  overflow: hidden;
+  position: relative;
+}
+
+@media (min-width: 720px) {
+  .builtby-card {
+    grid-template-columns: 240px 1fr;
+    gap: 32px;
+    padding: 28px 32px;
+  }
+}
+
+:global(.dark) .builtby-card,
+.dark .builtby-card {
+  border-color: rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(
+      ellipse at top right,
+      rgba(238, 90, 36, 0.1),
+      transparent 60%
+    ),
+    rgba(20, 23, 27, 0.5);
+  color: #f6f5f2;
+}
+
+.builtby-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #14171b;
+  width: 100%;
+}
+
+:global(.dark) .builtby-art,
+.dark .builtby-art {
+  color: #f6f5f2;
+}
+
+.builtby-svg {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  overflow: visible;
+}
+
+.builtby-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.builtby-eyebrow {
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ee5a24;
+}
+
+.builtby-title {
+  margin: 8px 0 0;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: #14171b;
+}
+
+:global(.dark) .builtby-title,
+.dark .builtby-title {
+  color: #f6f5f2;
+}
+
+.builtby-desc {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(20, 23, 27, 0.7);
+  max-width: 56ch;
+}
+
+:global(.dark) .builtby-desc,
+.dark .builtby-desc {
+  color: rgba(246, 245, 242, 0.7);
+}
+
+.builtby-products {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 22px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(20, 23, 27, 0.65);
+}
+
+:global(.dark) .builtby-products,
+.dark .builtby-products {
+  color: rgba(246, 245, 242, 0.65);
+}
+
+.builtby-products li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.builtby-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ee5a24;
+}
+
+.builtby-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 22px 0 0;
+}
+
+.builtby-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 6px;
+  background: #ee5a24;
+  color: #f6f5f2;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition:
+    background-color 220ms ease-out,
+    transform 220ms ease-out;
+}
+
+.builtby-link:hover {
+  background: #d24f1f;
+  transform: translateY(-1px);
+}
+
+.builtby-link--secondary {
+  background: transparent;
+  color: #ee5a24;
+  border: 1px solid #ee5a24;
+}
+
+.builtby-link--secondary:hover {
+  background: rgba(238, 90, 36, 0.08);
+}
+
+:global(.dark) .builtby-link--secondary,
+.dark .builtby-link--secondary {
+  color: #ee5a24;
+  border-color: #ee5a24;
 }

@@ -11,10 +11,8 @@ const CENTER_Y = 44
 
 export function LinkFlow({
   caption,
-  captionNumber,
 }: {
   caption?: React.ReactNode
-  captionNumber?: string
 }) {
   return (
     <figure className="figure">
@@ -176,7 +174,7 @@ export function LinkFlow({
           </text>
         </motion.g>
       </motion.svg>
-      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
+      {caption ? <Caption>{caption}</Caption> : null}
     </figure>
   )
 }
