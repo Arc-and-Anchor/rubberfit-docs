@@ -1,0 +1,67 @@
+---
+title: Data handling
+description: "U.S. region, encrypted at rest, signed-URL document sharing, retention windows, and how customer data flows through Rubberfit."
+---
+
+import { Callout } from 'nextra/components'
+
+# Data handling
+
+This page describes how Rubberfit stores, transmits, and shares your data.
+
+## Where data lives
+
+- **Application database**: Supabase Postgres in the U.S. region (AWS us-east-1)
+- **Object storage**: Supabase Storage (S3-backed) in the same region
+- **Edge cache**: Vercel's global edge network (no PII cached; only static marketing assets)
+- **Email**: outbound email via Resend (transactional only — magic links, password resets)
+
+We do not run our own database servers. Supabase + AWS handle the underlying encryption-at-rest, snapshots, and physical-security guarantees.
+
+## Encryption
+
+- **At rest**: AES-256 via AWS KMS, applied by default to the database and object storage
+- **In transit**: TLS 1.3 between client and edge, between edge and origin, and between origin and Supabase
+- **Cookies**: HTTP-only, `Secure`, `SameSite=Lax` for session tokens
+
+## Document sharing (the signed-URL story)
+
+Customer-facing PDFs (job receipts, invoices, public job-share pages) work like this:
+
+1. The PDF is generated server-side and written to Supabase Storage in a non-public bucket
+2. A short-lived signed URL is generated with a UUID-based file path
+3. The signed URL is shared with the customer (via email or a public-but-uncrawlable share page)
+4. The link works for the configured TTL; after that, the file remains stored but the URL stops resolving
+
+What customers see in the PDF: their order summary, dimensions, quantity, total, due date, customer barcode for tracking. **Nothing else.** Operator notes, cut-history layouts, yield percentages, internal pricing, and audit-log entries never appear in customer-shareable artifacts.
+
+## Retention
+
+| Data class | Retention |
+|---|---|
+| Active rolls / jobs / customers | Indefinite (until deleted by admin) |
+| Cut history (layout JSON, yield, operator) | Indefinite — required for audit |
+| Admin audit log | Indefinite — required for compliance |
+| Notifications | 90 days then auto-pruned |
+| Customer-facing PDFs | Indefinite while the job is active; archived after job close |
+| Email transcripts (magic links) | 30 days |
+
+Workspace owners can delete any record manually. Some classes (cut history, audit log) cannot be deleted by non-`super_admin` roles to preserve the audit trail.
+
+## What we do not collect
+
+- **No browser fingerprinting.** No tracking pixels.
+- **No third-party analytics on the dashboard.** Marketing site uses Vercel Analytics (privacy-first, no cookies). The application sends zero telemetry to third parties.
+- **No code-base training.** Customer data is never used to train models. The Max-tier AI planner uses the model providers' commercial APIs under their data-use commitments and discards the inputs after the response.
+
+## Backups + disaster recovery
+
+Supabase runs point-in-time recovery (PITR) with 7-day retention on the production database. Object storage replicates within the AWS region. We do not currently run cross-region failover; recovery objective is 24 hours for a regional outage.
+
+## Got a question?
+
+Email **security@rubberfit.app**.
+
+<Callout type="info">
+For SOC 2 questionnaire support, see the [SOC 2 roadmap](/security/soc2-roadmap) — most questions can be answered from this page plus the [security posture](/security/posture) inventory.
+</Callout>

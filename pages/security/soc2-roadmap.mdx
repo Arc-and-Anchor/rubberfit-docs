@@ -1,0 +1,46 @@
+---
+title: SOC 2 roadmap
+description: "Quarterly steps from current security posture to SOC 2 Type II. Each item has an owner and a target quarter."
+---
+
+import { Callout } from 'nextra/components'
+
+# SOC 2 roadmap
+
+We are not SOC 2 certified. We are working toward it. This page is the unvarnished version of the path.
+
+<Callout>
+This roadmap is updated when items ship or slip. If a quarter passes without an update here, ping **security@rubberfit.app**.
+</Callout>
+
+## The path
+
+| Quarter | Item | Status |
+|---|---|---|
+| Q1 | Forced MFA for admin and manager roles | Planned |
+| Q1 | Dependency scanning in CI (`npm audit` + `cargo audit`, fail on high) | Planned |
+| Q2 | Formal security policy + risk register | Planned |
+| Q2 | External log aggregation + 1-year retention | Planned |
+| Q3 | Third-party penetration test | Planned |
+| Q3 | SOC 2 Type I audit engagement | Planned |
+| Q4 | SOC 2 Type II observation period begins | Planned |
+
+## What "Type I" vs "Type II" means
+
+- **SOC 2 Type I** is a point-in-time audit: at the moment the audit happens, do the controls exist and are they designed correctly?
+- **SOC 2 Type II** is an audit over a sustained observation period (typically 6–12 months): do those controls actually operate as designed, every day?
+
+Type I is the on-ramp. Type II is the credential most enterprise buyers expect to see in a security questionnaire. The roadmap above ends with the Type II observation period beginning — the report itself lands ~12 months after that.
+
+## Why we publish this
+
+Two reasons:
+
+1. **It is the honest answer.** Pretending to be further along than we are wastes everyone's time. Buyers who need certified SOC 2 today should know that today.
+2. **It pre-empts the questionnaire.** Most security questionnaires ask "do you have SOC 2?" and "what's your roadmap?" If the answer is on a public page, you can paste the URL into the response field and move on.
+
+## How we got the technical posture without the cert
+
+The codebase was built with the controls a SOC 2 auditor would expect — RLS at the database, RBAC enforced twice, audit log with before/after JSONB snapshots, signed-URL document sharing, encryption at rest. See [Security posture](/security/posture) for the full inventory.
+
+What's missing is the **people-and-process** layer: codified policies, vendor-risk scoring, training records, exercised incident-response plans. That layer is what most of the roadmap above is about.

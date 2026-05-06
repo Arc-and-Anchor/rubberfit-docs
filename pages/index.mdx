@@ -1,0 +1,68 @@
+---
+title: Introduction
+description: "Rubberfit is a manufacturing operations platform for rubber-roll fabricators. A Rust nesting engine, full inventory, jobs, audit, and barcode workflow — in one product."
+---
+
+import { Callout, Cards } from 'nextra/components'
+
+# Rubberfit
+
+Rubberfit is a manufacturing operations platform built specifically for rubber-roll fabricators. It runs the cutting floor end to end: receive rolls at the dock, plan cuts with a Rust-powered nesting engine, track every offcut, ship branded customer PDFs, and keep a full audit trail behind every cut.
+
+It is one product, one bill, one source of truth — replacing the typical stack of a CAD nesting plugin (ProNest, SigmaNEST) plus a generic MRP (Plex, Epicor, E2) plus a CRM bolt-on.
+
+<Cards num={2}>
+  <Cards.Card title="Quickstart" href="/getting-started/quickstart">
+    Sign up, scan your first roll in, run a Pack, and ship the cut — under 15 minutes.
+  </Cards.Card>
+  <Cards.Card title="The cutting engine" href="/cutting-engine/overview">
+    How Auto Nest and Free-roam work, and what the Rust engine does under the hood.
+  </Cards.Card>
+  <Cards.Card title="Inventory model" href="/inventory/rolls">
+    Roll lineage, offcuts as first-class inventory, reorder rules, suppliers, POs.
+  </Cards.Card>
+  <Cards.Card title="Security posture" href="/security/posture">
+    What's shipped today (RLS, six-role RBAC, audit log) and the roadmap to SOC 2.
+  </Cards.Card>
+</Cards>
+
+## What Rubberfit is
+
+- **A real Rust nesting engine.** Polygon bin packing via [jagua-rs](https://github.com/JeroenGar/jagua-rs), guided local search via a sparrow-style metaheuristic. Produces optimal layouts in seconds — not generic shape arrangement.
+- **A full operations suite.** Rolls, offcuts, jobs, customers, suppliers, POs, barcodes, notifications, audit log. Every workflow on the floor maps to one place in the app.
+- **Audit-ready by default.** Every cut is recorded with full layout JSON. Every admin action is captured with before/after snapshots, IP, user agent.
+- **Operator-grade UX.** Built for the floor — barcode-driven receiving, scan-to-load at the cut table, no live-load latency, no hidden state.
+
+## What Rubberfit is not
+
+- **Not a CAD plugin.** Rubberfit doesn't run inside Rhino or Fusion. It's the operating system above the cutting machine, not the drawing tool below it.
+- **Not generic MRP.** Rubberfit is opinionated about rubber-roll workflows. If you cut sheet metal or laminate, look elsewhere.
+- **Not a chatbot.** No AI conversation interface. The AI capabilities (Max tier) augment the planner workflow — they don't replace it.
+
+## Where things live
+
+| Surface | URL |
+|---|---|
+| Marketing site | [`get.rubberfit.app`](https://get.rubberfit.app) |
+| The application | [`dashboard.rubberfit.app`](https://dashboard.rubberfit.app) |
+| Documentation (you are here) | `docs.rubberfit.app` |
+| Pricing | [`get.rubberfit.app/pricing`](https://get.rubberfit.app/pricing) |
+| Security | [`get.rubberfit.app/security`](https://get.rubberfit.app/security) |
+| Support | [`hello@rubberfit.app`](mailto:hello@rubberfit.app) |
+
+## The four-step spine
+
+Every job rides the same spine — receive, plan, cut, ship — and every step is one query away.
+
+1. **Receive.** Trucks arrive. Operators scan rolls in at the dock. Length, width, durometer, and lot are captured at receipt — no manual entry. Each roll gets a barcode label printed before it leaves the receiving area.
+2. **Plan.** Operators select parts from the queue, dial in stock, and press Pack. The Rust engine returns an optimized layout in under three seconds. Free-roam is one click away when the spec demands manual placement.
+3. **Cut.** Layouts print to the floor as a numbered cut list. Operators tick parts off as they cut. Offcuts auto-record to `offcuts` with `parent_roll_id` lineage.
+4. **Ship.** Finished parts roll into shipping with their barcode lineage intact. Customer PDFs auto-generate without internal artifacts — no nesting diagrams, no operator notes, no yield numbers visible to the customer.
+
+<Callout type="info">
+  The marketing site has an [animated walk-through of the four-step spine](https://get.rubberfit.app/how-it-works) if you want a visual intro before reading the docs.
+</Callout>
+
+## Built by Arc & Anchor
+
+Rubberfit is an Arc & Anchor original — designed, built, and maintained by the same five people who answer the support email. [Meet the creators →](https://www.arcanchor.com/about-us)

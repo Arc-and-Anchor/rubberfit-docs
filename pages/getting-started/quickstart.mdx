@@ -1,0 +1,67 @@
+---
+title: Quickstart
+description: "From signup to first cut in under fifteen minutes."
+---
+
+import { Callout, Steps, Cards } from 'nextra/components'
+
+# Quickstart
+
+This walkthrough gets you from a fresh signup to a finished cut in under fifteen minutes. You'll need:
+
+- A web browser
+- A barcode scanner (optional — keyboard works too)
+- One roll of stock (we'll create test data if you don't have one yet)
+
+<Steps>
+### Sign up
+
+Visit [`get.rubberfit.app/pricing`](https://get.rubberfit.app/pricing) and start a 14-day Pro trial. No credit card required. You'll get a workspace at `dashboard.rubberfit.app` with admin role attached to your account.
+
+### Receive your first roll
+
+Open `Inventory → Rolls → New roll`. Enter the dimensions, durometer, lot, and supplier. Save. Rubberfit prints a barcode label you can stick on the physical roll.
+
+Or, if you have purchase order data, jump to `Inventory → Purchase orders → Receive PO`. Receiving a PO line auto-creates the matching roll record — no double entry.
+
+### Create a job
+
+Open `Jobs → New job`. Add the customer name, email, dimensions, quantity, due date, and material. Assign an operator. The job gets its own barcode automatically.
+
+### Run Auto Nest
+
+Open the Cutting Engine: `/dashboard/cutting-engine`. Select the job, dial in the source roll, and press **Pack**. The Rust engine returns an optimized layout in 1–3 seconds.
+
+The yield percent shows in the header. The layout is recorded to `cut_history` the moment you confirm the cut session.
+
+### Cut and ship
+
+Print the cut list. Operators tick off parts as they cut. Offcuts auto-record to `offcuts` with `parent_roll_id` lineage. When the job closes, a customer-facing PDF generates automatically — no internal layout diagrams, no operator notes — and a public-but-uncrawlable share URL goes out to the customer.
+</Steps>
+
+## What just happened
+
+In the background:
+
+- The roll is now tracked from receipt → cut → retire
+- Every offcut is searchable and reusable on future jobs
+- The cut session has full layout JSON in `cut_history` — you can replay it forever
+- The customer has a clean PDF; you have the internal record
+- The operator's actions are in the audit log
+
+## Next steps
+
+<Cards num={2}>
+  <Cards.Card title="Configure operator roles" href="/roles-rbac/the-six-roles">
+    Six roles, enforced at the database. Map them to your team.
+  </Cards.Card>
+  <Cards.Card title="Set reorder rules" href="/inventory/reorder-rules">
+    Per-material thresholds + preferred suppliers. Auto-draft POs when stock crosses the line.
+  </Cards.Card>
+  <Cards.Card title="Free-roam mode" href="/cutting-engine/free-roam">
+    When the spec needs manual placement, switch modes without losing the audit trail.
+  </Cards.Card>
+  <Cards.Card title="Branded customer PDFs" href="/jobs/customer-pdfs">
+    Customize the customer-facing receipt — logo, terms, support contact.
+  </Cards.Card>
+</Cards>
