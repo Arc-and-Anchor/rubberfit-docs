@@ -5,45 +5,43 @@ import { FIGURE_FONT, FIGURE_TOKENS } from "./figure-tokens"
 import { Caption } from "./Caption"
 
 type Child = {
-  label: string
-  width: number
+  name: string
+  size: string
 }
 
+const PARENT_W = 240
 const PARENT_H = 40
-const CHILD_H = 36
+const CHILD_W = 116
+const CHILD_H = 38
 const TOP_Y = 8
 const BUS_Y = TOP_Y + PARENT_H + 22
 const CHILD_Y = BUS_Y + 22
-const CHILD_GAP = 16
+const SIZE_LABEL_OFFSET = 18
+const CHILD_GAP = 18
 const SIDE_PAD = 24
 
 export function Cascade({
   parentLabel,
   children,
   caption,
-  captionNumber,
 }: {
   parentLabel: string
   children: Child[]
   caption?: React.ReactNode
-  captionNumber?: string
 }) {
   if (children.length === 0) return null
   const totalChildW =
-    children.reduce((acc, c) => acc + c.width, 0) +
-    Math.max(0, children.length - 1) * CHILD_GAP
-  const totalW = totalChildW + SIDE_PAD * 2
-  const totalH = CHILD_Y + CHILD_H + 8
+    children.length * CHILD_W + Math.max(0, children.length - 1) * CHILD_GAP
+  const totalW = Math.max(totalChildW + SIDE_PAD * 2, PARENT_W + SIDE_PAD * 2)
+  const totalH = CHILD_Y + CHILD_H + SIZE_LABEL_OFFSET + 12
 
-  let cursor = SIDE_PAD
-  const childPositions = children.map((c) => {
-    const x = cursor
-    cursor += c.width + CHILD_GAP
-    return { x, w: c.width }
-  })
+  const childStartX = (totalW - totalChildW) / 2
+  const childPositions = children.map((_, i) => ({
+    x: childStartX + i * (CHILD_W + CHILD_GAP),
+    w: CHILD_W,
+  }))
   const childCenters = childPositions.map((p) => p.x + p.w / 2)
-  const parentW = Math.min(280, totalW * 0.55)
-  const parentX = (totalW - parentW) / 2
+  const parentX = (totalW - PARENT_W) / 2
 
   return (
     <figure className="figure">
@@ -63,7 +61,7 @@ export function Cascade({
           <rect
             x={parentX}
             y={TOP_Y}
-            width={parentW}
+            width={PARENT_W}
             height={PARENT_H}
             rx={4}
             fill={FIGURE_TOKENS.parent.fill}
@@ -120,7 +118,7 @@ export function Cascade({
         </motion.g>
         {children.map((child, i) => (
           <motion.g
-            key={child.label}
+            key={child.name}
             variants={{
               hidden: { opacity: 0, y: 8 },
               visible: {
@@ -133,7 +131,7 @@ export function Cascade({
             <rect
               x={childPositions[i].x}
               y={CHILD_Y}
-              width={child.width}
+              width={CHILD_W}
               height={CHILD_H}
               rx={4}
               fill={FIGURE_TOKENS.child.fill}
@@ -144,18 +142,29 @@ export function Cascade({
               x={childCenters[i]}
               y={CHILD_Y + CHILD_H / 2}
               fontFamily={FIGURE_FONT}
-              fontSize={11}
+              fontSize={12}
               fontWeight={500}
               fill={FIGURE_TOKENS.child.label}
               dominantBaseline="middle"
               textAnchor="middle"
             >
-              {child.label}
+              {child.name}
+            </text>
+            <text
+              x={childCenters[i]}
+              y={CHILD_Y + CHILD_H + SIZE_LABEL_OFFSET}
+              fontFamily={FIGURE_FONT}
+              fontSize={11}
+              fontWeight={500}
+              fill="rgba(246,245,242,0.55)"
+              textAnchor="middle"
+            >
+              {child.size}
             </text>
           </motion.g>
         ))}
       </motion.svg>
-      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
+      {caption ? <Caption>{caption}</Caption> : null}
     </figure>
   )
 }
