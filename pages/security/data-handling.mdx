@@ -1,67 +1,127 @@
 ---
 title: Data handling
-description: "U.S. region, encrypted at rest, signed-URL document sharing, retention windows, and how customer data flows through Rubberfit."
+description: "U.S. region, encrypted at rest by Supabase + AWS, signed-URL document sharing for customer artifacts, retention windows, and exactly how customer data flows through Rubberfit."
 ---
 
 import { Callout } from 'nextra/components'
 
 # Data handling
 
-This page describes how Rubberfit stores, transmits, and shares your data.
+This page describes how Rubberfit stores, transmits, and shares your data. Every claim is anchored to a file, a Postgres construct, or a third-party guarantee — see [Security posture](/security/posture) for the full inventory of controls.
 
 ## Where data lives
 
-- **Application database**: Supabase Postgres in the U.S. region (AWS us-east-1)
-- **Object storage**: Supabase Storage (S3-backed) in the same region
-- **Edge cache**: Vercel's global edge network (no PII cached; only static marketing assets)
-- **Email**: outbound email via Resend (transactional only — magic links, password resets)
+| Surface | Provider | Region |
+|---|---|---|
+| Application database | Supabase Postgres 15 | AWS us-east-1 |
+| Object storage | Supabase Storage (S3-backed) | AWS us-east-1 |
+| Edge cache (marketing) | Vercel global edge | Multi-region static only |
+| Application compute | Vercel Fluid Compute | iad1 (us-east-1) |
+| Email (transactional) | Resend | U.S.-region |
 
-We do not run our own database servers. Supabase + AWS handle the underlying encryption-at-rest, snapshots, and physical-security guarantees.
+**No customer data leaves the U.S.** We do not run our own database servers. Supabase + AWS handle the underlying encryption-at-rest, snapshots, and physical-security guarantees; we own the application, RLS policies, and access controls on top.
 
 ## Encryption
 
-- **At rest**: AES-256 via AWS KMS, applied by default to the database and object storage
-- **In transit**: TLS 1.3 between client and edge, between edge and origin, and between origin and Supabase
-- **Cookies**: HTTP-only, `Secure`, `SameSite=Lax` for session tokens
+### At rest
 
-## Document sharing (the signed-URL story)
+- **Postgres + Storage** — encrypted at rest by Supabase on AWS-managed infrastructure (EBS per-volume encryption + S3 SSE). This is a Supabase platform guarantee on its Pro tier and above; we don't hold or rotate the underlying keys ourselves.
+- **Backups** — Supabase point-in-time recovery snapshots inherit the same at-rest encryption.
 
-Customer-facing PDFs (job receipts, invoices, public job-share pages) work like this:
+<Callout type="info">
+The standard SOC 2 questionnaire asks about KMS / per-volume key management. Encryption at rest on Rubberfit is provided by **Supabase's AWS infrastructure**, not configured at the application level. Supabase publishes its own SOC 2 + encryption posture at [supabase.com/security](https://supabase.com/security).
+</Callout>
 
-1. The PDF is generated server-side and written to Supabase Storage in a non-public bucket
-2. A short-lived signed URL is generated with a UUID-based file path
-3. The signed URL is shared with the customer (via email or a public-but-uncrawlable share page)
-4. The link works for the configured TTL; after that, the file remains stored but the URL stops resolving
+### In transit
 
-What customers see in the PDF: their order summary, dimensions, quantity, total, due date, customer barcode for tracking. **Nothing else.** Operator notes, cut-history layouts, yield percentages, internal pricing, and audit-log entries never appear in customer-shareable artifacts.
+- TLS 1.3 client → Vercel edge
+- TLS 1.3 Vercel → Supabase (over the AWS internal network)
+- TLS 1.3 Vercel → Resend for transactional email
+
+There is no plaintext hop in the request path.
+
+### Cookies
+
+Session and refresh tokens live in cookies with `HttpOnly`, `Secure`, and `SameSite=Lax` set. The session JWT is short-lived (minutes); the refresh token rotates on every refresh.
+
+## Document sharing — the signed-URL story
+
+### Customer-facing PDFs
+
+When a customer-facing job PDF is issued (the receipt-style document customers actually receive), it works like this:
+
+1. The PDF is generated **server-side** in `src/infrastructure/services/jobPdfShareService.ts`. The client never sees the service-role key.
+2. The file is written to a **non-public Supabase Storage bucket** under a UUID-based path.
+3. A short-lived signed URL is created via `supabase.storage.from(...).createSignedUrl(...)`.
+4. That signed URL is shared with the customer (email body or share-page redirect).
+5. The link works for the configured TTL; after that, the file remains stored but the URL stops resolving without a re-sign.
+
+**What a customer can see in their PDF:** order summary, dimensions, quantity, total, due date, and a customer barcode for tracking. **What's never in there:** operator notes, cut-history layouts, yield percentages, internal pricing, nesting diagrams, audit-log entries. This is enforced at PDF-generation time — internal artifacts are written by a different code path to a different storage bucket entirely.
+
+### Cut-history PDFs (internal)
+
+Cut-history PDFs — the artifact a manager downloads to inspect a past cut — are also written to Supabase Storage but are currently served via `getPublicUrl()` from `src/infrastructure/services/cutPdfStorageService.ts`. The path is UUID-based and non-enumerable, but a leaked link is good until rotated.
+
+<Callout type="warning">
+**Migrating cut-history PDFs to signed URLs is on the SOC 2 roadmap (Q3).** The current public-bucket model is fine for internal team use but would not pass a strict zero-trust audit. We're flagging it on this page rather than glossing over it.
+</Callout>
 
 ## Retention
 
 | Data class | Retention |
 |---|---|
-| Active rolls / jobs / customers | Indefinite (until deleted by admin) |
+| Active rolls / jobs / customers | Indefinite (until deleted by `admin`) |
 | Cut history (layout JSON, yield, operator) | Indefinite — required for audit |
-| Admin audit log | Indefinite — required for compliance |
+| Admin activity log | Indefinite — required for compliance |
 | Notifications | 90 days then auto-pruned |
+| Notification queue (sent items) | 30 days then auto-pruned |
 | Customer-facing PDFs | Indefinite while the job is active; archived after job close |
-| Email transcripts (magic links) | 30 days |
+| Email transcripts (magic links, MFA codes, password resets) | 30 days at Resend |
+| Vercel access logs | 30 days |
+| Supabase database logs | 7 days |
 
-Workspace owners can delete any record manually. Some classes (cut history, audit log) cannot be deleted by non-`super_admin` roles to preserve the audit trail.
+`admin` users can delete most records manually. Some classes (cut history, audit log) cannot be deleted by non-`admin` roles to preserve the audit trail. Hard-deletion of a customer record cascades through `jobs` and `purchase_orders` only after the user explicitly confirms a destructive operation.
+
+## Backups + disaster recovery
+
+| What | How | RPO |
+|---|---|---|
+| Postgres database | Supabase **point-in-time recovery, 7-day retention** | &lt; 5 minutes |
+| Object storage | Supabase Storage replicates within `us-east-1` | &lt; 5 minutes |
+| Cross-region failover | Not implemented today | n/a |
+
+Recovery objective for a regional AWS outage is **24 hours**. Supabase runs multi-AZ within the region, which covers the realistic failure modes (single-AZ outage) without our involvement.
 
 ## What we do not collect
 
 - **No browser fingerprinting.** No tracking pixels.
-- **No third-party analytics on the dashboard.** Marketing site uses Vercel Analytics (privacy-first, no cookies). The application sends zero telemetry to third parties.
-- **No code-base training.** Customer data is never used to train models. The Max-tier AI planner uses the model providers' commercial APIs under their data-use commitments and discards the inputs after the response.
+- **No third-party analytics on the dashboard.** Marketing site uses Vercel Analytics (cookieless, privacy-preserving). The application sends **zero telemetry** to third-party trackers — no Mixpanel, no Segment, no Datadog RUM, no Sentry session replay.
+- **No code-base training.** Customer data is never used to train models. The Max-tier AI planner (when shipped) uses model providers' commercial APIs under their data-use commitments and discards inputs after the response.
+- **No service-role keys in the browser.** All privileged Supabase operations happen server-side.
 
-## Backups + disaster recovery
+## Sub-processors
 
-Supabase runs point-in-time recovery (PITR) with 7-day retention on the production database. Object storage replicates within the AWS region. We do not currently run cross-region failover; recovery objective is 24 hours for a regional outage.
+The vendors that touch customer data, in the order data flows through them on a normal request:
+
+| Vendor | Purpose | Region |
+|---|---|---|
+| **Vercel** | Web hosting + Fluid Compute (Next.js) | U.S. (iad1) |
+| **Supabase** | Postgres database + Auth + Storage | U.S. (us-east-1) |
+| **AWS** | Underlying compute / storage for Supabase | U.S. (us-east-1) |
+| **Resend** | Transactional email (magic links, MFA, password reset) | U.S. |
+| **Cloudflare** | DNS for `rubberfit.app` and subdomains | Global |
+
+All five publish their own SOC 2 reports.
+
+## Customer rights (data export + deletion)
+
+- **Export.** Workspace owners can export the full inventory + jobs + cut-history dataset as JSON or CSV from `Settings → Data → Export`. We can also produce the export server-side on request and deliver via signed URL.
+- **Deletion.** A workspace owner can request hard-deletion of the workspace and all associated data. We complete it within 30 days of the request and confirm by email. Audit-log entries from non-deleted workspaces that reference deleted users are anonymized rather than removed (so the audit chain stays intact).
 
 ## Got a question?
 
 Email **security@rubberfit.app**.
 
 <Callout type="info">
-For SOC 2 questionnaire support, see the [SOC 2 roadmap](/security/soc2-roadmap) — most questions can be answered from this page plus the [security posture](/security/posture) inventory.
+For SOC 2 questionnaire support, see the [SOC 2 roadmap](/security/soc2-roadmap) — most questions can be answered from this page plus the [Security posture](/security/posture) inventory.
 </Callout>

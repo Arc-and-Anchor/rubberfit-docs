@@ -4,10 +4,19 @@ description: "Draft → sent → received PO lifecycle with auto-roll creation o
 ---
 
 import { Callout, Steps } from 'nextra/components'
+import { StateMachine } from '../../components/figures'
 
 # Purchase orders
 
 POs in Rubberfit move through five states: `draft`, `sent`, `partially_received`, `received`, and `cancelled`. Receipt automatically creates `inventory.rolls` records — no manual data entry, no double keying.
+
+<StateMachine
+  layout="branching"
+  states={["Draft", "Sent", "Partial", "Received"]}
+  branchIndex={1}
+  branchLabel="Cancelled"
+  label="Purchase order lifecycle: four-state main path with a cancelled exit from sent"
+/>
 
 ## The PO record
 
@@ -71,7 +80,7 @@ A PO can be partially received multiple times. The status flips to `received` on
 
 ### Cancel
 
-Drafts can be cancelled freely. Sent POs can be cancelled with a note (recorded in `audit_log`). Received POs cannot be cancelled — corrections require a new PO with negative quantities.
+Drafts can be cancelled freely. Sent POs can be cancelled with a note (recorded in `admin.admin_activity_log`). Received POs cannot be cancelled — corrections require a new PO with negative quantities.
 
 </Steps>
 

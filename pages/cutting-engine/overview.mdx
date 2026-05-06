@@ -4,10 +4,16 @@ description: "How the Rust + jagua-rs + sparrow GLS pipeline plans cuts on every
 ---
 
 import { Callout, Cards } from 'nextra/components'
+import { Pipeline } from '../../components/figures'
 
 # Cutting engine overview
 
 Rubberfit's cutting engine is the most differentiated piece of the platform. It is a real Rust workspace — not a Python notebook, not a wrapper around a CAD plugin — and it runs on every **Pack** request from the dashboard.
+
+<Pipeline
+  stages={["Parse", "Pre-pass", "Initial", "Sparrow GLS", "Verify", "Yield", "Emit"]}
+  label="Seven-stage Rust pack-cli pipeline from request to layout JSON"
+/>
 
 ## What the engine does
 
@@ -73,7 +79,7 @@ Every committed pack writes to `cut_history` with:
 - `operator_id`, `roll_id`, `job_id`
 - `created_at` — UTC timestamp
 
-This row cannot be deleted by `manager` or below. Corrections require a `super_admin` action, which itself writes to `audit_log` with `before_value` and `after_value` JSONB snapshots.
+This row cannot be deleted by `manager` or below. Corrections require an `admin` action, which itself writes to `admin.admin_activity_log` (see [Admin activity log](/audit-history/admin-audit-log) for the schema).
 
 <Callout type="info">
 The engine is deterministic for a given input + `engine_version`. Replay a `layout_json` against the same engine version and you get pixel-identical placements. This is what makes audit defensible.

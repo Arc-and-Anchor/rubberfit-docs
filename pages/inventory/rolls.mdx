@@ -4,6 +4,7 @@ description: "Rolls are the primary inventory unit — how they enter the system
 ---
 
 import { Callout, Steps } from 'nextra/components'
+import { StateMachine } from '../../components/figures'
 
 # Rolls
 
@@ -26,6 +27,12 @@ The `inventory.rolls` table backs every roll. Key columns:
 | `status` | `active` / `retired` / `quarantine` |
 
 ## Lifecycle
+
+<StateMachine
+  layout="linear"
+  states={["Receive", "Active", "Cut", "Retire", "Quarantine"]}
+  label="Roll lifecycle states from receipt through retirement"
+/>
 
 <Steps>
 
@@ -79,7 +86,7 @@ WHERE poi.created_roll_ids @> ARRAY[$1::uuid];
 This lineage is what makes audit defensible — you can answer "which customer order consumed which physical roll" with a single join.
 
 <Callout type="info">
-Rolls are immutable once created. Adjustments to dimensions or material require an admin action that writes to `audit_log` with before/after JSONB snapshots.
+Rolls are immutable once created. Adjustments to dimensions or material require an `admin` action that writes a row to `admin.admin_activity_log` with the change in `metadata JSONB`.
 </Callout>
 
 ## See also

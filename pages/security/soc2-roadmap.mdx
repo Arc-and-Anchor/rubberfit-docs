@@ -1,29 +1,49 @@
 ---
 title: SOC 2 roadmap
-description: "Quarterly steps from current security posture to SOC 2 Type II. Each item has an owner and a target quarter."
+description: "Quarterly steps from current security posture to SOC 2 Type II. Each item points to a control we either have not shipped, or have shipped only partially. Updated when items move."
 ---
 
 import { Callout } from 'nextra/components'
+import { DiamondTrack } from '../../components/figures'
 
 # SOC 2 roadmap
 
-We are not SOC 2 certified. We are working toward it. This page is the unvarnished version of the path.
+We are not SOC 2 certified. We are working toward it. This page is the unvarnished version of the path — every item below maps to a control or process we either have not shipped, or have shipped partially.
+
+<DiamondTrack
+  marks={["Q1", "Q2", "Q3", "Q4"]}
+  activeIndex={0}
+  label="Quarterly milestone track from Q1 hardening through Q4 SOC 2 Type II observation"
+/>
 
 <Callout>
 This roadmap is updated when items ship or slip. If a quarter passes without an update here, ping **security@rubberfit.app**.
 </Callout>
 
+## Where we are today
+
+The technical controls a SOC 2 auditor would expect are largely in production code — see [Security posture](/security/posture) for the inventory. The gaps fall into three buckets:
+
+1. **Hardening of existing controls** — promote CSP from report-only to enforcing, add before/after JSONB to the audit log, sign cut-history PDFs, hard-enforce MFA enrollment for privileged roles.
+2. **Process + documentation** — codified security policy, vendor-risk scoring, exercised incident-response plan, training records.
+3. **External validation** — dependency scanning in CI, third-party penetration test, formal SOC 2 audit engagement.
+
+The roadmap below is one quarter at a time.
+
 ## The path
 
-| Quarter | Item | Status |
-|---|---|---|
-| Q1 | Forced MFA for admin and manager roles | Planned |
-| Q1 | Dependency scanning in CI (`npm audit` + `cargo audit`, fail on high) | Planned |
-| Q2 | Formal security policy + risk register | Planned |
-| Q2 | External log aggregation + 1-year retention | Planned |
-| Q3 | Third-party penetration test | Planned |
-| Q3 | SOC 2 Type I audit engagement | Planned |
-| Q4 | SOC 2 Type II observation period begins | Planned |
+| Quarter | Item | Bucket | Status |
+|---|---|---|---|
+| Q1 | **Forced MFA enrollment for `admin` and `manager` roles** — block sign-in for users without an enrolled factor | Hardening | Planned |
+| Q1 | **Dependency scanning in CI** — `npm audit` + `cargo audit`, fail the build on high severity | External | Planned |
+| Q1 | **CSP promoted to enforcing mode** — wire per-request nonces, drop `'unsafe-inline'` / `'unsafe-eval'`, flip `Content-Security-Policy-Report-Only` to `Content-Security-Policy` | Hardening | Planned |
+| Q2 | **Audit log v2** — split `metadata JSONB` into explicit `before_state` / `after_state` columns and back-fill `ip_address` / `user_agent` on every call site (columns exist; some inserts currently leave them `NULL`) | Hardening | Planned |
+| Q2 | **Formal security policy + risk register** — codified policies, vendor-risk scoring, training records | Process | Planned |
+| Q2 | **External log aggregation** — ship Vercel + Supabase logs to a SIEM with 1-year retention | External | Planned |
+| Q3 | **Signed URLs for cut-history PDFs** — migrate from `getPublicUrl` to `createSignedUrl` with bucket-level policy | Hardening | Planned |
+| Q3 | **Third-party penetration test** | External | Planned |
+| Q3 | **SOC 2 Type I audit engagement** — auditor selected, control mapping signed off | External | Planned |
+| Q4 | **SOC 2 Type II observation period begins** | External | Planned |
 
 ## What "Type I" vs "Type II" means
 
@@ -32,6 +52,20 @@ This roadmap is updated when items ship or slip. If a quarter passes without an 
 
 Type I is the on-ramp. Type II is the credential most enterprise buyers expect to see in a security questionnaire. The roadmap above ends with the Type II observation period beginning — the report itself lands ~12 months after that.
 
+## Already shipped (so we don't double-count it)
+
+For honesty, here's what's already in production today and **does not need to ship** to close the SOC 2 gap. These are real controls, not future work:
+
+- **Row-level security on every customer-facing table** — 26 `ENABLE ROW LEVEL SECURITY` statements, 157 policies, all 25 app tables covered
+- **Six-role RBAC enforced at the edge (middleware) and the data layer (RLS)** — see [Security posture](/security/posture#authorization)
+- **TOTP MFA enrollment + inline challenge for opted-in users** — every user who enrolls a factor is challenged at sign-in. Q1's "forced MFA" item is about closing the loophole for users who haven't enrolled, not about implementing MFA itself.
+- **Security headers** — HSTS preload-eligible 2-year, X-Frame DENY, X-Content-Type-Options, Referrer-Policy, Permissions-Policy. CSP is in report-only mode (Q1 item promotes it to enforcing).
+- **Signed URLs for customer-facing job PDFs** — `jobPdfShareService` issues short-lived signed URLs. Q3's "signed URLs" item is for the **internal** cut-history PDF surface, which still uses `getPublicUrl`.
+- **Postgres advisory locks during pack solves** — concurrency-safe roll allocation
+- **Point-in-time recovery, 7-day retention** — Supabase platform default
+- **TLS 1.3 in transit, encrypted at rest** — provided by Supabase + AWS infrastructure
+- **No third-party telemetry on the dashboard** — zero trackers shipped to the browser
+
 ## Why we publish this
 
 Two reasons:
@@ -39,8 +73,6 @@ Two reasons:
 1. **It is the honest answer.** Pretending to be further along than we are wastes everyone's time. Buyers who need certified SOC 2 today should know that today.
 2. **It pre-empts the questionnaire.** Most security questionnaires ask "do you have SOC 2?" and "what's your roadmap?" If the answer is on a public page, you can paste the URL into the response field and move on.
 
-## How we got the technical posture without the cert
+## Got a question?
 
-The codebase was built with the controls a SOC 2 auditor would expect — RLS at the database, RBAC enforced twice, audit log with before/after JSONB snapshots, signed-URL document sharing, encryption at rest. See [Security posture](/security/posture) for the full inventory.
-
-What's missing is the **people-and-process** layer: codified policies, vendor-risk scoring, training records, exercised incident-response plans. That layer is what most of the roadmap above is about.
+Email **security@rubberfit.app**. Most questionnaires can be answered from this page plus [Security posture](/security/posture) plus [Data handling](/security/data-handling).

@@ -1,82 +1,94 @@
 ---
 title: Permission matrix
-description: "Exhaustive per-action breakdown of which role can do what. Enforced at both middleware and Postgres RLS."
+description: "Exhaustive per-action breakdown of which role can do what. Source of truth: src/application/permissions.ts. Enforced at both middleware and Postgres RLS."
 ---
 
 # Permission matrix
 
-This is the source-of-truth matrix for who can do what. The same matrix is encoded in `app/lib/rbac.ts` and in the Postgres RLS policies.
+This is the source-of-truth matrix for who can do what. The same matrix is encoded in `src/application/permissions.ts` and mirrored into Postgres RLS policies.
 
-`✓` = allowed. `—` = denied. `(self)` = allowed only on records the user owns.
+`✓` = allowed. `—` = denied. `(self)` = allowed only on records the user owns or is assigned to.
+
+The six roles, in order of privilege: `admin`, `manager`, `supervisor`, `cutter`, `member`, `viewer`.
 
 ## Inventory
 
-| Action | super_admin | admin | manager | operator | viewer | customer |
+| Action | admin | manager | supervisor | cutter | member | viewer |
 |---|---|---|---|---|---|---|
-| List rolls | ✓ | ✓ | ✓ | ✓ | ✓ | — |
-| Create roll (manual) | ✓ | ✓ | ✓ | — | — | — |
-| Receive PO (auto-creates rolls) | ✓ | ✓ | ✓ | — | — | — |
-| Quarantine roll | ✓ | ✓ | ✓ | ✓ | — | — |
-| Unquarantine roll | ✓ | ✓ | ✓ | — | — | — |
-| Edit roll dimensions | ✓ | ✓ | — | — | — | — |
-| List offcuts | ✓ | ✓ | ✓ | ✓ | ✓ | — |
-| Edit material | ✓ | ✓ | — | — | — | — |
-| List suppliers | ✓ | ✓ | ✓ | — | ✓ | — |
-| Edit supplier | ✓ | ✓ | — | — | — | — |
-| Set reorder rule | ✓ | ✓ | ✓ | — | — | — |
+| View inventory | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Manage rolls (create / quarantine / receive PO) | ✓ | ✓ | — | — | — | — |
+| Edit roll dimensions | ✓ | — | — | — | — | — |
+| List offcuts | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Manage material types | ✓ | ✓ | — | — | — | — |
+| Manage suppliers | ✓ | ✓ | — | — | — | — |
+| Manage pricing | ✓ | — | — | — | — | — |
+| Set reorder rule | ✓ | ✓ | — | — | — | — |
 
 ## Purchase orders
 
-| Action | super_admin | admin | manager | operator | viewer | customer |
+| Action | admin | manager | supervisor | cutter | member | viewer |
 |---|---|---|---|---|---|---|
-| Draft PO | ✓ | ✓ | ✓ | — | — | — |
-| Send PO | ✓ | ✓ | ✓ | — | — | — |
-| Receive PO | ✓ | ✓ | ✓ | — | — | — |
-| Cancel sent PO | ✓ | ✓ | — | — | — | — |
+| Draft PO | ✓ | ✓ | — | — | — | — |
+| Send PO | ✓ | ✓ | — | — | — | — |
+| Receive PO | ✓ | ✓ | — | — | — | — |
+| Cancel sent PO | ✓ | — | — | — | — | — |
 
 ## Jobs
 
-| Action | super_admin | admin | manager | operator | viewer | customer |
+| Action | admin | manager | supervisor | cutter | member | viewer |
 |---|---|---|---|---|---|---|
-| Create job | ✓ | ✓ | ✓ | — | — | — |
+| Create job | ✓ | ✓ | — | — | — | — |
 | Assign roll | ✓ | ✓ | ✓ | ✓ | — | — |
-| Set priority | ✓ | ✓ | ✓ | — | — | — |
-| Assign operator | ✓ | ✓ | ✓ | — | — | — |
-| Cancel job | ✓ | ✓ | ✓ | — | — | — |
-| View own job | ✓ | ✓ | ✓ | (self) | ✓ | (self) |
-| View customer PDF | ✓ | ✓ | ✓ | ✓ | ✓ | (self) |
+| Set priority | ✓ | ✓ | — | — | — | — |
+| Assign cutter | ✓ | ✓ | ✓ | — | — | — |
+| Cancel job | ✓ | ✓ | — | — | — | — |
+| View own job | ✓ | ✓ | ✓ | (self) | ✓ | ✓ |
 
-## Cuts
+## Cutting engine
 
-| Action | super_admin | admin | manager | operator | viewer | customer |
+| Action | admin | manager | supervisor | cutter | member | viewer |
 |---|---|---|---|---|---|---|
-| Run Auto Nest | ✓ | ✓ | ✓ | ✓ | — | — |
-| Run Free-roam | ✓ | ✓ | ✓ | ✓ | — | — |
-| Commit cut | ✓ | ✓ | ✓ | ✓ | — | — |
-| View cut history | ✓ | ✓ | ✓ | ✓ | ✓ | — |
+| Access cutting engine | ✓ | — | — | ✓ | — | — |
+| Run Auto Nest | ✓ | — | — | ✓ | — | — |
+| Run Free-roam | ✓ | — | — | ✓ | — | — |
+| Commit cut | ✓ | — | — | ✓ | — | — |
+| Approve cut | ✓ | — | ✓ | — | — | — |
+| View cut history | ✓ | ✓ | ✓ | ✓ | — | — |
 | Void cut | ✓ | — | — | — | — | — |
+
+## Analytics
+
+| Action | admin | manager | supervisor | cutter | member | viewer |
+|---|---|---|---|---|---|---|
+| Access analytics | ✓ | ✓ | ✓ | — | — | — |
+| View current consumption | ✓ | ✓ | ✓ | — | — | — |
+| View period consumption | ✓ | ✓ | — | — | — | — |
+| View material usage | ✓ | ✓ | ✓ | — | — | — |
+| View cost reports | ✓ | ✓ | — | — | — | — |
+| View trends | ✓ | ✓ | — | — | — | — |
+| View reports | ✓ | ✓ | ✓ | — | — | — |
 
 ## Users + workspace
 
-| Action | super_admin | admin | manager | operator | viewer | customer |
+| Action | admin | manager | supervisor | cutter | member | viewer |
 |---|---|---|---|---|---|---|
-| Invite user | ✓ | ✓ | — | — | — | — |
-| Promote to manager | ✓ | ✓ | — | — | — | — |
-| Promote to admin | ✓ | — | — | — | — | — |
-| Promote to super_admin | ✓ | — | — | — | — | — |
-| Demote user | ✓ | (below admin) | — | — | — | — |
-| Edit workspace settings | ✓ | ✓ | — | — | — | — |
-| Edit workspace branding | ✓ | ✓ | — | — | — | — |
+| Invite user | ✓ | — | — | — | — | — |
+| Promote up to `supervisor` | ✓ | — | — | — | — | — |
+| Promote to `manager` | ✓ | — | — | — | — | — |
+| Promote to `admin` | ✓ (two-step) | — | — | — | — | — |
+| Demote user | ✓ | — | — | — | — | — |
+| Edit workspace settings | ✓ | — | — | — | — | — |
+| Edit workspace branding | ✓ | — | — | — | — | — |
 
 ## Audit
 
-| Action | super_admin | admin | manager | operator | viewer | customer |
+| Action | admin | manager | supervisor | cutter | member | viewer |
 |---|---|---|---|---|---|---|
-| Read audit_log | ✓ | — | — | — | — | — |
-| Read cut_history | ✓ | ✓ | ✓ | ✓ | ✓ | — |
-| Export cut_history | ✓ | ✓ | ✓ | — | ✓ | — |
+| Read admin activity log | ✓ | — | — | — | — | — |
+| Read cut history | ✓ | ✓ | ✓ | ✓ | — | — |
+| Export cut history | ✓ | ✓ | — | — | — | — |
 
 ## See also
 
 - [The six roles](/roles-rbac/the-six-roles)
-- [Security posture](/security/posture)
+- [Security posture → Authorization](/security/posture#authorization)
