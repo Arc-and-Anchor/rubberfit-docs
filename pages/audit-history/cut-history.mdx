@@ -4,6 +4,7 @@ description: "Every cut session, replayable from the layout JSON. The audit tabl
 ---
 
 import { Callout } from 'nextra/components'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Cut history
 
@@ -82,7 +83,9 @@ If a cut needs to be voided (rare; only for audit corrections), a `super_admin` 
 Cut history is the canonical record. The cut list printout, the customer PDF, and any operator screen are derived views — if they ever disagree with `cut_history`, `cut_history` wins.
 </Callout>
 
-## See also
-
-- [Cutting engine overview](/cutting-engine/overview)
-- [Admin audit log](/audit-history/admin-audit-log)
+<SeeAlso
+  links={[
+    { title: "Cutting engine overview", href: "/cutting-engine/overview" },
+    { title: "Admin audit log", href: "/audit-history/admin-audit-log" },
+  ]}
+/>

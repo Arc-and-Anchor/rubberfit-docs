@@ -5,6 +5,7 @@ description: "Rolls are the primary inventory unit — how they enter the system
 
 import { Callout, Steps } from 'nextra/components'
 import { StateMachine } from '../../components/figures'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Rolls
 
@@ -95,9 +96,11 @@ This lineage is what makes audit defensible — you can answer "which customer o
 Rolls are immutable once created. Adjustments to dimensions or material require an `admin` action that writes a row to `admin.admin_activity_log` with the change in `metadata JSONB`.
 </Callout>
 
-## See also
-
-- [Offcuts](/inventory/offcuts) — first-class reusable inventory
-- [Reorder rules](/inventory/reorder-rules) — auto-trigger POs before stock-out
-- [Purchase orders](/inventory/purchase-orders) — how rolls enter
-- [Cut history](/audit-history/cut-history) — the per-cut record
+<SeeAlso
+  links={[
+    { title: "Offcuts", href: "/inventory/offcuts", blurb: "first-class reusable inventory" },
+    { title: "Reorder rules", href: "/inventory/reorder-rules", blurb: "auto-trigger POs before stock-out" },
+    { title: "Purchase orders", href: "/inventory/purchase-orders", blurb: "how rolls enter" },
+    { title: "Cut history", href: "/audit-history/cut-history", blurb: "the per-cut record" },
+  ]}
+/>

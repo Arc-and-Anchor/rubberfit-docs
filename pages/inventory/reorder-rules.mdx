@@ -4,6 +4,7 @@ description: "Per-material reorder thresholds and preferred suppliers. The engin
 ---
 
 import { Callout } from 'nextra/components'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Reorder rules
 
@@ -49,9 +50,11 @@ Reorder rules are evaluated against the **sum** of `remaining_area` across all a
 
 A good threshold is **lead time × peak daily consumption**, with a safety buffer. If your supplier delivers in 14 days and you cut up to 8 m² of this material per day, set the threshold around 130–150 m² to leave safety stock.
 
-## See also
-
-- [Rolls](/inventory/rolls)
-- [Offcuts](/inventory/offcuts)
-- [Purchase orders](/inventory/purchase-orders)
-- [Suppliers](/inventory/suppliers)
+<SeeAlso
+  links={[
+    { title: "Rolls", href: "/inventory/rolls" },
+    { title: "Offcuts", href: "/inventory/offcuts" },
+    { title: "Purchase orders", href: "/inventory/purchase-orders" },
+    { title: "Suppliers", href: "/inventory/suppliers" },
+  ]}
+/>

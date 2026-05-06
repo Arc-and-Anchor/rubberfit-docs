@@ -10,6 +10,7 @@ import {
   IconAutoNest,
   IconFreeRoamCanvas,
 } from '../../components/figures'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Cutting engine overview
 
@@ -106,9 +107,11 @@ This row cannot be deleted by `manager` or below. Corrections require an `admin`
 The engine is deterministic for a given input + `engine_version`. Replay a `layout_json` against the same engine version and you get pixel-identical placements. This is what makes audit defensible.
 </Callout>
 
-## See also
-
-- [Auto Nest](/cutting-engine/auto-nest) — the default mode
-- [Free-roam](/cutting-engine/free-roam) — manual placement
-- [Performance](/cutting-engine/performance) — solve-time and yield benchmarks
-- [Cut history](/audit-history/cut-history) — what gets archived per pack
+<SeeAlso
+  links={[
+    { title: "Auto Nest", href: "/cutting-engine/auto-nest", blurb: "the default mode" },
+    { title: "Free-roam", href: "/cutting-engine/free-roam", blurb: "manual placement" },
+    { title: "Performance", href: "/cutting-engine/performance", blurb: "solve-time and yield benchmarks" },
+    { title: "Cut history", href: "/audit-history/cut-history", blurb: "what gets archived per pack" },
+  ]}
+/>

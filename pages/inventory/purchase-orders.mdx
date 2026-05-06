@@ -5,6 +5,7 @@ description: "Draft → sent → received PO lifecycle with auto-roll creation o
 
 import { Callout, Steps } from 'nextra/components'
 import { StateMachine } from '../../components/figures'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Purchase orders
 
@@ -93,8 +94,10 @@ Drafts can be cancelled freely. Sent POs can be cancelled with a note (recorded 
 Auto-roll creation on receipt is the single biggest workflow accelerator in Rubberfit. A 10-line PO that would take 30 minutes of manual roll entry collapses into one **Receive all** click.
 </Callout>
 
-## See also
-
-- [Suppliers](/inventory/suppliers)
-- [Reorder rules](/inventory/reorder-rules)
-- [Rolls](/inventory/rolls)
+<SeeAlso
+  links={[
+    { title: "Suppliers", href: "/inventory/suppliers" },
+    { title: "Reorder rules", href: "/inventory/reorder-rules" },
+    { title: "Rolls", href: "/inventory/rolls" },
+  ]}
+/>

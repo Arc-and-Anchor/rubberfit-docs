@@ -4,6 +4,7 @@ description: "Configure your Rubberfit workspace — invite the team, set roles,
 ---
 
 import { Callout, Steps } from 'nextra/components'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Workspace setup
 
@@ -74,8 +75,10 @@ Reorder rules are optional but recommended. They turn stock-out events into pre-
 
 Receive a test roll, create a test job with one or two parts, run [your first cut](/getting-started/first-cut). This validates that materials → rolls → jobs → engine round-trips work before you bring real customer orders into the system.
 
-## See also
-
-- [The six roles](/roles-rbac/the-six-roles)
-- [Inventory rolls](/inventory/rolls)
-- [Reorder rules](/inventory/reorder-rules)
+<SeeAlso
+  links={[
+    { title: "The six roles", href: "/roles-rbac/the-six-roles" },
+    { title: "Inventory rolls", href: "/inventory/rolls" },
+    { title: "Reorder rules", href: "/inventory/reorder-rules" },
+  ]}
+/>

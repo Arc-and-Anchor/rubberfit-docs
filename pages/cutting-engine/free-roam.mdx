@@ -4,6 +4,7 @@ description: "Manual placement on a live canvas with sub-millimeter snap, polygo
 ---
 
 import { Callout } from 'nextra/components'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Free-roam
 
@@ -67,8 +68,10 @@ Free-roam cuts produce the same `cut_history` row as Auto Nest cuts. The `layout
 Free-roam runs the same final-pass overlap and yield checks as Auto Nest. A Free-roam layout will not commit if it has overlaps — the engine refuses the request with a list of conflict pairs.
 </Callout>
 
-## See also
-
-- [Auto Nest](/cutting-engine/auto-nest) — the default
-- [Performance](/cutting-engine/performance)
-- [Cut history](/audit-history/cut-history)
+<SeeAlso
+  links={[
+    { title: "Auto Nest", href: "/cutting-engine/auto-nest", blurb: "the default" },
+    { title: "Performance", href: "/cutting-engine/performance" },
+    { title: "Cut history", href: "/audit-history/cut-history" },
+  ]}
+/>

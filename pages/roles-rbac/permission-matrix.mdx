@@ -3,6 +3,8 @@ title: Permission matrix
 description: "Exhaustive per-action breakdown of which role can do what. Source of truth: src/application/permissions.ts. Enforced at both middleware and Postgres RLS."
 ---
 
+import { SeeAlso } from '../../components/SeeAlso'
+
 # Permission matrix
 
 This is the source-of-truth matrix for who can do what. The same matrix is encoded in `src/application/permissions.ts` and mirrored into Postgres RLS policies.
@@ -88,7 +90,9 @@ The six roles, in order of privilege: `admin`, `manager`, `supervisor`, `cutter`
 | Read cut history | ✓ | ✓ | ✓ | ✓ | — | — |
 | Export cut history | ✓ | ✓ | — | — | — | — |
 
-## See also
-
-- [The six roles](/roles-rbac/the-six-roles)
-- [Security posture → Authorization](/security/posture#authorization)
+<SeeAlso
+  links={[
+    { title: "The six roles", href: "/roles-rbac/the-six-roles" },
+    { title: "Security posture → Authorization", href: "/security/posture#authorization" },
+  ]}
+/>

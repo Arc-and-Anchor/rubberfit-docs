@@ -5,6 +5,7 @@ description: "Walk through creating a job, assigning material, running Auto Nest
 
 import { Callout, Steps } from 'nextra/components'
 import { PressFlow } from '../../components/figures'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Your first cut
 
@@ -69,8 +70,10 @@ Click **Commit cut** to `POST /api/cuts/commit`. This:
 4. Mark each cut part scanned-out via `/dashboard/scan`
 5. When all parts are cut, the job auto-progresses to `completed` per the [jobs lifecycle](/jobs/lifecycle)
 
-## See also
-
-- [Cutting engine overview](/cutting-engine/overview)
-- [Inventory rolls](/inventory/rolls)
-- [Jobs lifecycle](/jobs/lifecycle)
+<SeeAlso
+  links={[
+    { title: "Cutting engine overview", href: "/cutting-engine/overview" },
+    { title: "Inventory rolls", href: "/inventory/rolls" },
+    { title: "Jobs lifecycle", href: "/jobs/lifecycle" },
+  ]}
+/>

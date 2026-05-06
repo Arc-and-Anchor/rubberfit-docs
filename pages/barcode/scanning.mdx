@@ -4,6 +4,7 @@ description: "The /scan route resolves any barcode — roll, job, offcut — and
 ---
 
 import { Callout } from 'nextra/components'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Scanning
 
@@ -59,8 +60,10 @@ Every scan event writes to `audit_log` with:
 
 Scans that don't result in state changes (e.g., looking up a roll without assigning it) still log, with `action = "lookup"`.
 
-## See also
-
-- [Labels](/barcode/labels)
-- [Rolls](/inventory/rolls)
-- [Job lifecycle](/jobs/lifecycle)
+<SeeAlso
+  links={[
+    { title: "Labels", href: "/barcode/labels" },
+    { title: "Rolls", href: "/inventory/rolls" },
+    { title: "Job lifecycle", href: "/jobs/lifecycle" },
+  ]}
+/>

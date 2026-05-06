@@ -4,6 +4,7 @@ description: "Roll labels printed at receiving, job barcodes generated on creati
 ---
 
 import { Callout } from 'nextra/components'
+import { SeeAlso } from '../../components/SeeAlso'
 
 # Barcode labels
 
@@ -53,8 +54,10 @@ Higher-end laser/inkjet works but is overkill for label print volume.
 The barcodes encode UUIDs as base64 to keep Code 128 width manageable. The dashboard reverses the encoding on scan; operators never see the encoded form.
 </Callout>
 
-## See also
-
-- [Scanning](/barcode/scanning)
-- [Rolls](/inventory/rolls)
-- [Job lifecycle](/jobs/lifecycle)
+<SeeAlso
+  links={[
+    { title: "Scanning", href: "/barcode/scanning" },
+    { title: "Rolls", href: "/inventory/rolls" },
+    { title: "Job lifecycle", href: "/jobs/lifecycle" },
+  ]}
+/>
