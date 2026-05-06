@@ -1,78 +1,100 @@
 ---
-title: Admin audit log
-description: "Sensitive admin actions captured with before/after JSONB snapshots, IP, and user agent. RLS-protected — only super_admin reads."
+title: Admin activity log
+description: "admin.admin_activity_log captures admin-tier actions with actor, resource, metadata JSONB, IP, and user agent. RLS-protected — only admin role reads."
 ---
 
 import { Callout } from 'nextra/components'
 
-# Admin audit log
+# Admin activity log
 
-The `audit_log` table captures sensitive admin actions: user-role changes, material edits, quarantine flips, supplier-contact updates, and other operations that affect downstream behavior.
+The `admin.admin_activity_log` table captures admin-tier actions: alert acknowledgements, health-endpoint changes, deployment markers, organization edits, user-role transitions, and other operations that affect platform-level state. It is intentionally **narrow in scope** — it is not the change-tracking table for every inventory edit (see [Cut history](/audit-history/cut-history) for per-cut records).
 
 ## What gets logged
 
-| Action class | Example |
+Action strings are free-form (so the team can introduce new action types without a migration), but every row's `resource_type` is constrained at the schema level via `CHECK`:
+
+| `resource_type` | Example actions |
 |---|---|
-| `user.role.changed` | Promoting an operator to manager |
-| `user.invited` | Sending a new-user invite |
-| `material.updated` | Changing default kerf for a material |
-| `roll.quarantined` | Manually flagging a roll for defect |
-| `roll.unquarantined` | Releasing a quarantined roll |
-| `supplier.updated` | Editing supplier contact info |
-| `purchase_order.cancelled` | Cancelling a sent PO |
-| `job.cancelled` | Cancelling a job (any operator+) |
-| `cut.voided` | Voiding a cut history row (super_admin only) |
-| `workspace.settings.updated` | Changing units, timezone, branding |
+| `user` | `user.role.changed`, `user.invited`, `user.demoted` |
+| `org` | `org.settings.updated`, `org.branding.updated` |
+| `alert` | `alert.acknowledged`, `alert.muted` |
+| `deployment` | `deployment.marked` |
+| `health_endpoint` | `health_endpoint.created`, `health_endpoint.disabled` |
+| `health_check` | `health_check.acknowledged` |
+| `system` | Workspace-level system actions |
 
-## The audit record
+## The schema
 
-`audit_log`:
+`admin.admin_activity_log`:
 
-| Column | Notes |
-|---|---|
-| `id` | UUID |
-| `actor_id` | FK to the user who took the action |
-| `action` | One of the action classes above |
-| `resource_type` | `user` / `roll` / `material` / etc. |
-| `resource_id` | The UUID of the affected entity |
-| `before_value` | JSONB snapshot of the row before the action |
-| `after_value` | JSONB snapshot after |
-| `ip_address` | The IP the action came from |
-| `user_agent` | The browser/client UA string |
-| `created_at` | UTC timestamp |
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `BIGSERIAL` | Primary key |
+| `actor_id` | `UUID` | FK → `auth.users(id)` (`ON DELETE SET NULL` so deleted users keep their audit trail) |
+| `actor_email` | `TEXT NOT NULL` | Snapshotted at insert time, survives user deletion |
+| `action` | `TEXT NOT NULL` | The action string (`user.role.changed` etc.) |
+| `resource_type` | `TEXT NOT NULL` | Constrained via `CHECK` (see above) |
+| `resource_id` | `TEXT` | The affected entity's id (UUID or composite) |
+| `metadata` | `JSONB NOT NULL DEFAULT '{}'` | Action-specific context — the row that was changed, which fields, etc. |
+| `ip_address` | `INET` | Request IP at insert time (nullable; not all call sites populate it today) |
+| `user_agent` | `TEXT` | Request UA at insert time (nullable; not all call sites populate it today) |
+| `created_at` | `TIMESTAMPTZ NOT NULL DEFAULT NOW()` | UTC |
 
-`before_value` and `after_value` are full row snapshots — not diffs — so a future schema change can't break a query against historical entries.
+There are GIN + B-tree indexes on `(actor_id, created_at)`, `(resource_type, resource_id, created_at)`, `created_at`, and `metadata` so audit queries by actor, resource, time, or metadata field are all fast.
+
+<Callout type="info">
+**`metadata` is a single JSONB blob today**, not split into `before_state` / `after_state` columns. Splitting that — and ensuring every call site populates `ip_address` / `user_agent` — is on the [SOC 2 roadmap](/security/soc2-roadmap) under Q2. The columns exist; the inserter discipline is the gap.
+</Callout>
 
 ## RLS-protected
 
-The audit log is itself protected by row-level security. Only `super_admin` can read the table; everyone else gets zero rows.
+Two policies gate the table:
 
-This is intentional. The audit log is a defense against bad actors, including bad-actor admins. A `super_admin` removing entries from the audit log generates its own audit-log entry that another `super_admin` can see — there is no clean way to cover tracks.
+```sql
+CREATE POLICY "admin_activity_log: admins select"
+  ON admin.admin_activity_log FOR SELECT USING (admin.is_admin());
 
-<Callout type="warning">
-Don't try to use the audit log as a general-purpose change-tracking table for application features. It's intentionally narrow. Use database history extensions (e.g., `pgaudit`) or application-level event logs for broader use cases.
-</Callout>
+CREATE POLICY "admin_activity_log: admins insert"
+  ON admin.admin_activity_log FOR INSERT TO authenticated
+  WITH CHECK (admin.is_admin() AND actor_id = auth.uid());
+```
+
+Only `admin` users can read or insert. The insert policy also enforces that `actor_id` matches the calling user's JWT — an `admin` cannot impersonate a different actor.
+
+This is intentional. The audit log is a defense against bad actors, including bad-actor admins. An `admin` removing entries from the audit log generates its own audit-log entry that another `admin` can see — there is no clean way to cover tracks.
 
 ## Querying
 
 ```sql
 -- All role changes in the last 90 days
-SELECT a.created_at, actor.email AS actor, target.email AS target,
-       a.before_value->'role' AS old_role, a.after_value->'role' AS new_role
-FROM audit_log a
-JOIN auth.users actor ON actor.id = a.actor_id
-JOIN auth.users target ON target.id = a.resource_id
+SELECT a.created_at, a.actor_email, a.resource_id AS target_user_id,
+       a.metadata->>'old_role' AS old_role,
+       a.metadata->>'new_role' AS new_role,
+       a.ip_address
+FROM admin.admin_activity_log a
 WHERE a.action = 'user.role.changed'
   AND a.created_at > NOW() - INTERVAL '90 days'
 ORDER BY a.created_at DESC;
 ```
 
+```sql
+-- All actions on a specific resource
+SELECT a.created_at, a.actor_email, a.action, a.metadata
+FROM admin.admin_activity_log a
+WHERE a.resource_type = 'org' AND a.resource_id = $1
+ORDER BY a.created_at DESC;
+```
+
 ## Retention
 
-Audit log rows are never auto-deleted. SOC 2 will require a documented retention policy; the planned policy is "indefinite for compliance, with archive-tiered storage after 2 years." See [SOC 2 roadmap](/security/soc2-roadmap).
+Rows are never auto-deleted. SOC 2 will require a documented retention policy; the planned policy is "indefinite for compliance, with archive-tiered storage after 2 years." See [SOC 2 roadmap](/security/soc2-roadmap).
+
+<Callout type="warning">
+Don't try to use this log as a general-purpose change-tracking table. The `resource_type` `CHECK` rejects rows that aren't admin-tier. Use database history extensions (e.g., `pgaudit`) or `cut_history` for broader use cases.
+</Callout>
 
 ## See also
 
 - [Cut history](/audit-history/cut-history) — the per-cut record
-- [Security posture](/security/posture)
+- [Security posture → Audit + observability](/security/posture#audit--observability)
 - [The six roles](/roles-rbac/the-six-roles)

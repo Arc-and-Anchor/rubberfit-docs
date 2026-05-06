@@ -4,10 +4,11 @@ description: "Five states from pending to shipped, the transitions between them,
 ---
 
 import { Callout, Steps } from 'nextra/components'
+import { StateMachine } from '../../components/figures'
 
 # Job lifecycle
 
-A Rubberfit job moves through five states. Each transition is logged to `audit_log` with the operator, timestamp, and before/after state.
+A Rubberfit job moves through five states. Each transition is recorded with the operator, timestamp, and the row's prior values.
 
 ## The five states
 
@@ -21,28 +22,13 @@ A Rubberfit job moves through five states. Each transition is logged to `audit_l
 
 ## State transitions
 
-```
-            ┌──────────────┐
-            │   pending    │
-            └──────┬───────┘
-                   │ assign roll
-                   ▼
-            ┌──────────────┐         ┌──────────────┐
-            │ in_progress  │────────▶│  cancelled   │
-            └──────┬───────┘  (any)  └──────────────┘
-                   │ all parts cut
-                   ▼
-            ┌──────────────┐
-            │  completed   │
-            └──────┬───────┘
-                   │ shipping confirms
-                   ▼
-            ┌──────────────┐
-            │   shipped    │
-            └──────────────┘
-```
+<StateMachine
+  layout="vertical"
+  states={["pending", "in_progress", "completed", "shipped"]}
+  label="Job lifecycle vertical state stack: pending → in_progress → completed → shipped, with a side branch to cancelled"
+/>
 
-`pending → in_progress` happens automatically when a roll is assigned. `in_progress → completed` happens automatically when the last part is scanned cut. `completed → shipped` requires a manual action — the shipping team scans the job barcode at the loading dock, and the system flips the status.
+`pending → in_progress` happens automatically when a roll is assigned. `in_progress → completed` happens automatically when the last part is scanned cut. `completed → shipped` requires a manual action — the shipping team scans the job barcode at the loading dock, and the system flips the status. Any state can transition to `cancelled` (with a manager+ role and a reason note).
 
 ## The job record
 
@@ -70,14 +56,14 @@ Each state change triggers:
 
 - Roll assigned and `inventory.rolls.remaining_area` reserved (not decremented yet)
 - Notification to the assigned operator
-- Audit-log entry: `before: { status: pending, roll_id: null }`, `after: { status: in_progress, roll_id: <uuid> }`
+- The transition is recorded with the actor, timestamp, and prior values
 
 ### in_progress → completed
 
 - Triggered by the final part-cut scan
 - The customer-facing PDF is generated and stored at a signed URL
 - A notification is sent to the customer email (if `customer_email` is set)
-- Audit-log entry recorded
+- The transition is recorded
 - The shipping team's queue surfaces the job
 
 ### completed → shipped
@@ -85,7 +71,7 @@ Each state change triggers:
 - Operator scans the job barcode at the loading dock
 - Status flips, `shipped_at` populated
 - The customer-facing PDF gains a "Shipped" stamp
-- Audit-log entry recorded
+- The transition is recorded
 
 ### any → cancelled
 
@@ -93,7 +79,7 @@ Each state change triggers:
 - Reserved roll area is released back to inventory
 - The customer is notified by email
 - The job barcode is marked invalid for future scans
-- Audit-log entry with the reason
+- A row is recorded with the reason
 
 </Steps>
 

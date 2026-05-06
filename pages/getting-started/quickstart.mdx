@@ -4,6 +4,7 @@ description: "From signup to first cut in under fifteen minutes."
 ---
 
 import { Callout, Steps, Cards } from 'nextra/components'
+import { StepRail } from '../../components/figures'
 
 # Quickstart
 
@@ -12,6 +13,11 @@ This walkthrough gets you from a fresh signup to a finished cut in under fifteen
 - A web browser
 - A barcode scanner (optional — keyboard works too)
 - One roll of stock (we'll create test data if you don't have one yet)
+
+<StepRail
+  steps={["Sign up", "Receive roll", "Create job", "Run Auto Nest", "Cut + ship"]}
+  label="Five-step onboarding rail from sign-up to first cut shipped"
+/>
 
 <Steps>
 ### Sign up

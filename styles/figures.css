@@ -1,0 +1,41 @@
+/* ============================================================
+   Inline doc figures — body-page graphics paired with prose
+   ============================================================ */
+
+.figure-shell {
+  margin: 32px 0;
+  padding: 24px;
+  border: 1px solid rgba(20, 23, 27, 0.08);
+  border-radius: 6px;
+  background: rgba(20, 23, 27, 0.02);
+  color: #14171b;
+}
+
+:global(.dark) .figure-shell,
+.dark .figure-shell {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(246, 245, 242, 0.02);
+  color: #f6f5f2;
+}
+
+.figure-svg {
+  width: 100%;
+  height: auto;
+  max-width: 720px;
+  margin: 0 auto;
+  display: block;
+  overflow: visible;
+}
+
+/* sr-only — accessible captions only */
+.figure-shell figcaption.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
