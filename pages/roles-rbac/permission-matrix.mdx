@@ -1,0 +1,82 @@
+---
+title: Permission matrix
+description: "Exhaustive per-action breakdown of which role can do what. Enforced at both middleware and Postgres RLS."
+---
+
+# Permission matrix
+
+This is the source-of-truth matrix for who can do what. The same matrix is encoded in `app/lib/rbac.ts` and in the Postgres RLS policies.
+
+`✓` = allowed. `—` = denied. `(self)` = allowed only on records the user owns.
+
+## Inventory
+
+| Action | super_admin | admin | manager | operator | viewer | customer |
+|---|---|---|---|---|---|---|
+| List rolls | ✓ | ✓ | ✓ | ✓ | ✓ | — |
+| Create roll (manual) | ✓ | ✓ | ✓ | — | — | — |
+| Receive PO (auto-creates rolls) | ✓ | ✓ | ✓ | — | — | — |
+| Quarantine roll | ✓ | ✓ | ✓ | ✓ | — | — |
+| Unquarantine roll | ✓ | ✓ | ✓ | — | — | — |
+| Edit roll dimensions | ✓ | ✓ | — | — | — | — |
+| List offcuts | ✓ | ✓ | ✓ | ✓ | ✓ | — |
+| Edit material | ✓ | ✓ | — | — | — | — |
+| List suppliers | ✓ | ✓ | ✓ | — | ✓ | — |
+| Edit supplier | ✓ | ✓ | — | — | — | — |
+| Set reorder rule | ✓ | ✓ | ✓ | — | — | — |
+
+## Purchase orders
+
+| Action | super_admin | admin | manager | operator | viewer | customer |
+|---|---|---|---|---|---|---|
+| Draft PO | ✓ | ✓ | ✓ | — | — | — |
+| Send PO | ✓ | ✓ | ✓ | — | — | — |
+| Receive PO | ✓ | ✓ | ✓ | — | — | — |
+| Cancel sent PO | ✓ | ✓ | — | — | — | — |
+
+## Jobs
+
+| Action | super_admin | admin | manager | operator | viewer | customer |
+|---|---|---|---|---|---|---|
+| Create job | ✓ | ✓ | ✓ | — | — | — |
+| Assign roll | ✓ | ✓ | ✓ | ✓ | — | — |
+| Set priority | ✓ | ✓ | ✓ | — | — | — |
+| Assign operator | ✓ | ✓ | ✓ | — | — | — |
+| Cancel job | ✓ | ✓ | ✓ | — | — | — |
+| View own job | ✓ | ✓ | ✓ | (self) | ✓ | (self) |
+| View customer PDF | ✓ | ✓ | ✓ | ✓ | ✓ | (self) |
+
+## Cuts
+
+| Action | super_admin | admin | manager | operator | viewer | customer |
+|---|---|---|---|---|---|---|
+| Run Auto Nest | ✓ | ✓ | ✓ | ✓ | — | — |
+| Run Free-roam | ✓ | ✓ | ✓ | ✓ | — | — |
+| Commit cut | ✓ | ✓ | ✓ | ✓ | — | — |
+| View cut history | ✓ | ✓ | ✓ | ✓ | ✓ | — |
+| Void cut | ✓ | — | — | — | — | — |
+
+## Users + workspace
+
+| Action | super_admin | admin | manager | operator | viewer | customer |
+|---|---|---|---|---|---|---|
+| Invite user | ✓ | ✓ | — | — | — | — |
+| Promote to manager | ✓ | ✓ | — | — | — | — |
+| Promote to admin | ✓ | — | — | — | — | — |
+| Promote to super_admin | ✓ | — | — | — | — | — |
+| Demote user | ✓ | (below admin) | — | — | — | — |
+| Edit workspace settings | ✓ | ✓ | — | — | — | — |
+| Edit workspace branding | ✓ | ✓ | — | — | — | — |
+
+## Audit
+
+| Action | super_admin | admin | manager | operator | viewer | customer |
+|---|---|---|---|---|---|---|
+| Read audit_log | ✓ | — | — | — | — | — |
+| Read cut_history | ✓ | ✓ | ✓ | ✓ | ✓ | — |
+| Export cut_history | ✓ | ✓ | ✓ | — | ✓ | — |
+
+## See also
+
+- [The six roles](/roles-rbac/the-six-roles)
+- [Security posture](/security/posture)

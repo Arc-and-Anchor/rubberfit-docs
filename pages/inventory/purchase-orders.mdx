@@ -1,0 +1,86 @@
+---
+title: Purchase orders
+description: "Draft → sent → received PO lifecycle with auto-roll creation on receipt. Partial receipts are first-class."
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Purchase orders
+
+POs in Rubberfit move through five states: `draft`, `sent`, `partially_received`, `received`, and `cancelled`. Receipt automatically creates `inventory.rolls` records — no manual data entry, no double keying.
+
+## The PO record
+
+`purchase_orders`:
+
+| Column | Notes |
+|---|---|
+| `id` | UUID |
+| `po_number` | Auto-incrementing display number (`PO-2026-0142`) |
+| `supplier_id` | FK |
+| `status` | `draft` / `sent` / `partially_received` / `received` / `cancelled` |
+| `created_at`, `sent_at`, `received_at` | Timestamps for state transitions |
+| `expected_delivery_date` | Optional; populated from supplier lead time |
+| `total_value_cents` | Computed from line items |
+
+Lines live in `purchase_order_items`:
+
+| Column | Notes |
+|---|---|
+| `purchase_order_id` | FK |
+| `material_id` | What was ordered |
+| `quantity_ordered_m2` | Drafted amount |
+| `quantity_received_m2` | Updated on each receipt event |
+| `unit_price_per_m2` | At PO creation |
+| `created_roll_ids` | Array of `inventory.rolls.id` populated on receipt |
+
+<Steps>
+
+### Draft
+
+A manager creates a PO from `/dashboard/inventory/purchase-orders/new` or from a [reorder rule](/inventory/reorder-rules) notification. Lines are added with material + quantity + unit price (auto-filled from `material_suppliers.default_price_per_m2` if available).
+
+### Send
+
+Click **Send to supplier** to:
+
+- Transition `status` to `sent`
+- Email the supplier the PO PDF (rendered server-side)
+- Lock further line edits — corrections after this require cancel + redraft
+
+### Receive (full)
+
+When the truck arrives and everything is on it, click **Receive all**. The system:
+
+1. Sets `quantity_received_m2 = quantity_ordered_m2` for every line
+2. Creates one `inventory.rolls` row per line (or per sub-line for split shipments)
+3. Sets `status` to `received`, populates `received_at`
+4. Writes a row to `inventory.price_history` for each line
+5. Generates barcode labels for the new rolls
+
+### Receive (partial)
+
+If only part of the shipment arrived, click **Receive partial**, enter the received quantity per line, and confirm. The system:
+
+1. Updates `quantity_received_m2` to the new value
+2. Creates `inventory.rolls` only for the received quantity
+3. Sets `status` to `partially_received`
+4. Leaves the line open for future receipts against the same PO
+
+A PO can be partially received multiple times. The status flips to `received` only when every line is fully received.
+
+### Cancel
+
+Drafts can be cancelled freely. Sent POs can be cancelled with a note (recorded in `audit_log`). Received POs cannot be cancelled — corrections require a new PO with negative quantities.
+
+</Steps>
+
+<Callout type="info">
+Auto-roll creation on receipt is the single biggest workflow accelerator in Rubberfit. A 10-line PO that would take 30 minutes of manual roll entry collapses into one **Receive all** click.
+</Callout>
+
+## See also
+
+- [Suppliers](/inventory/suppliers)
+- [Reorder rules](/inventory/reorder-rules)
+- [Rolls](/inventory/rolls)

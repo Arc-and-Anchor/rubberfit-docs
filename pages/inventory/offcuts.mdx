@@ -1,0 +1,75 @@
+---
+title: Offcuts
+description: "Offcuts are first-class inventory in Rubberfit. They retain parent_roll_id lineage and are searched by the engine before pulling fresh stock."
+---
+
+import { Callout } from 'nextra/components'
+
+# Offcuts
+
+Most ERPs treat offcuts as scrap. Rubberfit treats them as **first-class inventory**: searchable, reusable, and reached for automatically before the engine pulls a fresh roll.
+
+This is the single biggest material-yield lever in the platform. Customers report 15–25% of small-part demand satisfied from offcut stock without ever opening a new roll.
+
+## The offcut record
+
+The `inventory.offcuts` table stores them. Key columns:
+
+| Column | Notes |
+|---|---|
+| `id` | UUID |
+| `parent_roll_id` | FK back to the roll this came from |
+| `parent_cut_id` | FK to the `cut_history` row that produced this offcut |
+| `polygon` | The geometric shape of the offcut (irregular, JSONB array of points) |
+| `area_mm2` | Computed from polygon at creation |
+| `material_id` | Inherited from parent roll |
+| `created_at` | UTC timestamp |
+| `consumed_at` | NULL until the offcut is itself cut |
+| `status` | `available` / `consumed` / `discarded` |
+
+## Generation
+
+Offcuts are generated automatically when a cut commits. The engine's final pass:
+
+1. Computes the bounded leftover regions of the roll after all parts are placed
+2. Filters out regions smaller than the workspace's offcut threshold (default 0.05 m²)
+3. Triangulates each remaining region into a stable polygon
+4. Inserts an `inventory.offcuts` row with full geometric data
+
+## How the engine uses them
+
+When you press **Pack** on a job, the Auto Nest pre-pass:
+
+1. Gets the list of parts and their bounding-box areas
+2. Queries `inventory.offcuts` for `material_id = job.material_id` and `status = available`
+3. Filters offcuts whose `area_mm2` is at least 1.2× the smallest required part area (a safety factor)
+4. Tries those offcuts before pulling a fresh roll, lowest-area-first
+
+If the engine can satisfy the entire job from offcut stock, the operator sees an "All from offcuts" badge in the layout preview. Otherwise the engine combines offcuts + fresh stock as needed.
+
+## Manual override
+
+Operators can override the engine's choice by clicking **Choose stock** and selecting specific rolls or offcuts in the assignment modal. This is useful for:
+
+- Rush jobs where speed matters more than perfect yield
+- Customer-specific lot requirements
+- Defect avoidance — pulling a known-clean offcut over a roll with a flagged region
+
+<Callout type="info">
+The engine's offcut search ignores offcuts that are too irregular to fit any of the requested parts. Geometric eligibility is checked at solve time, not at the dashboard query level.
+</Callout>
+
+## Lineage display
+
+`/dashboard/inventory/offcuts/[id]` shows:
+
+- The parent roll and the originating cut
+- The cut history of any cut that consumed this offcut
+- A visualization of the offcut polygon overlaid on its parent roll
+
+This is what makes offcut reuse defensible to a quality auditor: every offcut traces back to a roll, every consumed offcut traces back to a cut.
+
+## See also
+
+- [Rolls](/inventory/rolls) — parent stock
+- [Cut history](/audit-history/cut-history) — what produces offcuts

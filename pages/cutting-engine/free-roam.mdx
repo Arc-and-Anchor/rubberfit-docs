@@ -1,0 +1,74 @@
+---
+title: Free-roam
+description: "Manual placement on a live canvas with sub-millimeter snap, polygon-aware overlap detection, and the same audit trail Auto Nest produces."
+---
+
+import { Callout } from 'nextra/components'
+
+# Free-roam
+
+Free-roam is the manual cutting mode. Use it when the spec demands a human eye — a defect on the roll, a customer-specific orientation, a rush job that doesn't fit the heuristic.
+
+## When to use it
+
+- The roll has a visual defect (scratch, gouge, color variation) that operators must work around
+- A part has a "this side up" orientation that varies per customer order
+- A rush job needs a specific layout to match an existing template
+- You're sanity-checking an Auto Nest result against a known-good reference
+
+For everything else, [Auto Nest](/cutting-engine/auto-nest) is faster and produces higher yield.
+
+## The canvas
+
+Free-roam opens a live canvas with the roll outline on the left, the unplaced part queue on the right, and a status bar with current yield, kerf clearance, and selected part dimensions.
+
+Controls:
+
+| Action | Mouse / keyboard |
+|---|---|
+| Place a part | Drag from queue → drop on canvas |
+| Move a placed part | Drag |
+| Rotate (locked angles) | Hold `R` + scroll, snaps to 15° / 45° / 90° |
+| Rotate (free) | Hold `Shift+R` + scroll, continuous |
+| Snap to grid | Hold `Shift` while moving — 0.5 mm grid |
+| Snap to part edge | Default — drag close to an existing part edge |
+| Snap to sheet edge | Default — drag close to roll boundary |
+| Delete | Select + `Delete` key |
+| Undo / redo | `Cmd-Z` / `Cmd-Shift-Z` |
+
+## Snap precision
+
+Free-roam uses **sub-millimeter snap** at 0.5 mm precision. Snap targets are:
+
+1. The current grid (configurable in workspace settings)
+2. Sheet edges (top, bottom, left, right)
+3. Existing placed parts (every polygon edge)
+
+When two snap targets are within `2 mm` of the cursor, the closer one wins. If they're equidistant, sheet edges win over grid which wins over part edges.
+
+## Overlap detection
+
+Free-roam runs the same `rf-geometry` polygon-intersection routine the Rust engine uses. Overlap detection is **polygon-aware** — not bounding-box. If you try to place a part where it would overlap an existing one, the canvas:
+
+1. Highlights the overlap region in red
+2. Prevents the drop
+3. Snaps to the nearest non-overlapping position if Hold-Shift drag is active
+
+## Audit guarantees
+
+Free-roam cuts produce the same `cut_history` row as Auto Nest cuts. The `layout_json` records:
+
+- Final position and rotation of every placed part
+- Operator-assigned overrides (e.g., manual rotation away from `allow_rotation`)
+- The `engine_version` and `pack-cli` snap-validation pass
+- A `mode: "free-roam"` flag so the audit trail distinguishes manual from automatic placements
+
+<Callout type="info">
+Free-roam runs the same final-pass overlap and yield checks as Auto Nest. A Free-roam layout will not commit if it has overlaps — the engine refuses the request with a list of conflict pairs.
+</Callout>
+
+## See also
+
+- [Auto Nest](/cutting-engine/auto-nest) — the default
+- [Performance](/cutting-engine/performance)
+- [Cut history](/audit-history/cut-history)

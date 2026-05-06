@@ -1,0 +1,118 @@
+---
+title: Job lifecycle
+description: "Five states from pending to shipped, the transitions between them, and how each state propagates to the audit log."
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Job lifecycle
+
+A Rubberfit job moves through five states. Each transition is logged to `audit_log` with the operator, timestamp, and before/after state.
+
+## The five states
+
+| State | Meaning |
+|---|---|
+| `pending` | Created, not yet started. Waiting for material assignment. |
+| `in_progress` | Material assigned, may have parts cut. |
+| `completed` | All parts cut. Ready to ship. |
+| `shipped` | Customer has the parts. Job closed. |
+| `cancelled` | Terminated before completion. |
+
+## State transitions
+
+```
+            ┌──────────────┐
+            │   pending    │
+            └──────┬───────┘
+                   │ assign roll
+                   ▼
+            ┌──────────────┐         ┌──────────────┐
+            │ in_progress  │────────▶│  cancelled   │
+            └──────┬───────┘  (any)  └──────────────┘
+                   │ all parts cut
+                   ▼
+            ┌──────────────┐
+            │  completed   │
+            └──────┬───────┘
+                   │ shipping confirms
+                   ▼
+            ┌──────────────┐
+            │   shipped    │
+            └──────────────┘
+```
+
+`pending → in_progress` happens automatically when a roll is assigned. `in_progress → completed` happens automatically when the last part is scanned cut. `completed → shipped` requires a manual action — the shipping team scans the job barcode at the loading dock, and the system flips the status.
+
+## The job record
+
+`jobs`:
+
+| Column | Notes |
+|---|---|
+| `id`, `barcode` | UUIDs |
+| `customer_name`, `customer_email`, `customer_phone`, `customer_notes` | Inline customer info — see [why no separate CRM](/jobs/customer-pdfs#why-no-separate-crm-table) |
+| `material_id` | FK |
+| `parts` | JSONB — array of `{ polygon, quantity, allow_rotation }` |
+| `status` | One of the five values |
+| `priority` | `low` / `normal` / `high` / `rush` |
+| `due_date` | Customer-promised date |
+| `assigned_operator_id` | Nullable FK to `auth.users` |
+| `roll_id` | FK to `inventory.rolls`, populated on assignment |
+
+## Side effects per transition
+
+Each state change triggers:
+
+<Steps>
+
+### pending → in_progress
+
+- Roll assigned and `inventory.rolls.remaining_area` reserved (not decremented yet)
+- Notification to the assigned operator
+- Audit-log entry: `before: { status: pending, roll_id: null }`, `after: { status: in_progress, roll_id: <uuid> }`
+
+### in_progress → completed
+
+- Triggered by the final part-cut scan
+- The customer-facing PDF is generated and stored at a signed URL
+- A notification is sent to the customer email (if `customer_email` is set)
+- Audit-log entry recorded
+- The shipping team's queue surfaces the job
+
+### completed → shipped
+
+- Operator scans the job barcode at the loading dock
+- Status flips, `shipped_at` populated
+- The customer-facing PDF gains a "Shipped" stamp
+- Audit-log entry recorded
+
+### any → cancelled
+
+- Requires a manager+ role and a reason note
+- Reserved roll area is released back to inventory
+- The customer is notified by email
+- The job barcode is marked invalid for future scans
+- Audit-log entry with the reason
+
+</Steps>
+
+<Callout type="warning">
+A cancelled job cannot be uncancelled. Operators who need to recover work create a new job with the same parts and reference the cancelled job's ID in the notes.
+</Callout>
+
+## Priority sort
+
+The dashboard cut queue sorts by:
+
+1. `priority desc` (rush > high > normal > low)
+2. `due_date asc`
+3. `created_at asc`
+
+A `rush` job with a far-future due date still sorts above a `normal` job with today's due date. This is intentional — operators should be able to see "what's the most urgent thing right now" without doing date math.
+
+## See also
+
+- [Customer PDFs](/jobs/customer-pdfs) — what customers see
+- [Operator assignment](/jobs/operator-assignment) — queues + notifications
+- [Cut history](/audit-history/cut-history)

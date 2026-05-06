@@ -1,0 +1,71 @@
+---
+title: Operator assignment
+description: "Assign jobs to operators, surface their queues, and route notifications. Priority + due-date sort, no verbal handoffs."
+---
+
+import { Callout } from 'nextra/components'
+
+# Operator assignment
+
+Operators don't ask "what should I cut next" — the dashboard tells them. Job assignment + notification is the spine of the floor workflow.
+
+## Assignment
+
+Managers assign jobs to operators in the job detail page (`/dashboard/jobs/[id]`). The assignment field accepts any user with `operator` role or higher.
+
+Assignment writes:
+
+- `jobs.assigned_operator_id`
+- An entry in the operator's notification queue
+- An `audit_log` row
+
+Re-assignment is allowed at any time before `completed`. The previous operator's queue updates immediately (the job disappears), and the new operator gets a notification.
+
+## The operator queue
+
+Each operator's queue lives at `/dashboard/jobs/queue`. It shows:
+
+- Jobs assigned to them, sorted by priority desc + due date asc
+- A status filter (default: hide `completed` and `shipped`)
+- A "claim" affordance for unassigned `pending` jobs in the operator's authorized materials
+
+Operators can self-claim unassigned jobs if their role allows it (configured in workspace settings). Default is yes for `operator` and above.
+
+## Notifications
+
+Six event types fire to operators:
+
+| Event | Trigger |
+|---|---|
+| `job_assigned` | A job was assigned to you |
+| `job_unassigned` | A job was reassigned away from you |
+| `job_priority_raised` | A queued job's priority went up |
+| `job_due_soon` | A job's due date is within 24 hours |
+| `roll_low_stock` | An assigned material crossed reorder threshold |
+| `cut_committed_by_other` | Audit notification — someone cut on a roll you had reserved |
+
+Notifications are in-app only — no email or SMS in the current product. They appear in the bell icon (top right) and on `/dashboard/notifications`.
+
+<Callout type="info">
+Email and SMS notifications are on the roadmap. The current in-app-only design keeps operators focused on the dashboard during shifts.
+</Callout>
+
+## Priority + due-date sort
+
+The queue sort is:
+
+1. `priority desc` (`rush > high > normal > low`)
+2. `due_date asc` (earliest first)
+3. `created_at asc` (older jobs first as a tiebreaker)
+
+This means a rush job created today sorts above a normal job due tomorrow. Tunable per-workspace if you want different defaults.
+
+## Cross-shop view (Max tier)
+
+On Max tier, managers can view assignment across multiple shops. The queue at `/dashboard/jobs/queue?scope=org` shows every operator's load, sorted by who has the most pending parts. Useful for rebalancing when one shop gets backed up.
+
+## See also
+
+- [Job lifecycle](/jobs/lifecycle)
+- [Customer PDFs](/jobs/customer-pdfs)
+- [The six roles](/roles-rbac/the-six-roles)

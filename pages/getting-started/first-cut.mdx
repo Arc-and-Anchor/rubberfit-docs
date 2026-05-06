@@ -1,0 +1,73 @@
+---
+title: Your first cut
+description: "Walk through creating a job, assigning material, running Auto Nest, and committing your first cut on the Rubberfit floor."
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Your first cut
+
+This is the operator-grade walkthrough — what actually happens on the floor between **Job created** and **Cut committed to history**. The [quickstart](/getting-started/quickstart) covers signup-to-first-cut; this page goes deeper.
+
+## Prerequisites
+
+- An account with `operator` role or higher
+- At least one row in `inventory.rolls` with `status = active`
+- A job in `pending` status with parts (polygons + quantities) attached
+- Auto Nest mode (the default). For manual placement, see [Free-roam](/cutting-engine/free-roam).
+
+<Steps>
+
+### Open the job
+
+Navigate to `/dashboard/jobs`, filter by `status = pending`, and open the target job. Verify the material spec, customer info, and any attachments in the right sidebar.
+
+If material is unmatched to available inventory, the **Assign Roll** button is disabled. Add stock via [purchase orders](/inventory/purchase-orders) first.
+
+### Assign material
+
+Click **Assign Roll** in the job sidebar. The modal queries `inventory.rolls` and `inventory.offcuts` filtered by `material_id`. Offcuts appear only if their `remaining_area` is sufficient for the smallest required part.
+
+Select by barcode (scan the physical roll's printed label) or by material filter. This writes `job.roll_id` and transitions the job to `in_progress`.
+
+### Launch the cutting engine
+
+Click **Pack** to trigger Auto Nest. The Next.js app opens a WebSocket to the Rust pipeline, sending `job_id` and `roll_id`. The engine acquires a Postgres advisory lock on the roll for the duration of the solve.
+
+Typical solve window: **1–3 seconds**. The progress indicator shows the current sparrow GLS iteration count.
+
+### Review and commit
+
+Inspect:
+
+- **Yield %** — placed part area divided by `roll.usable_width × roll.usable_length`
+- **Layout preview** — SVG render of every placed part with operator-readable labels
+- **Unplaced parts** — anything that didn't fit, with the reason
+
+Click **Commit cut** to `POST /api/cuts/commit`. This:
+
+1. Inserts a row into `cut_history` with full `layout_json`
+2. Decrements `roll.remaining_area`
+3. Generates offcut records with `parent_roll_id` lineage
+4. Releases the advisory lock
+5. Returns the printable cut list
+
+</Steps>
+
+<Callout type="warning">
+**Committed cuts are immutable.** There is no UI undo. Corrections require a new job or an admin adjustment, both of which write to `audit_log`. Confirm the layout before committing.
+</Callout>
+
+## What happens next
+
+1. Print the cut list and walk the layout to the cutting table
+2. [Scan the job barcode](/barcode/scanning) at the table to load the layout
+3. Cut each part in the order shown
+4. Mark each cut part scanned-out via `/dashboard/scan`
+5. When all parts are cut, the job auto-progresses to `completed` per the [jobs lifecycle](/jobs/lifecycle)
+
+## See also
+
+- [Cutting engine overview](/cutting-engine/overview)
+- [Inventory rolls](/inventory/rolls)
+- [Jobs lifecycle](/jobs/lifecycle)

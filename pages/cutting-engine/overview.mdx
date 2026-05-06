@@ -1,0 +1,87 @@
+---
+title: Cutting engine overview
+description: "How the Rust + jagua-rs + sparrow GLS pipeline plans cuts on every Pack request. Two modes, one engine, one audit trail."
+---
+
+import { Callout, Cards } from 'nextra/components'
+
+# Cutting engine overview
+
+Rubberfit's cutting engine is the most differentiated piece of the platform. It is a real Rust workspace — not a Python notebook, not a wrapper around a CAD plugin — and it runs on every **Pack** request from the dashboard.
+
+## What the engine does
+
+Given a roll and a list of parts (polygons + quantities), the engine returns:
+
+- An optimal layout (positions and rotations for every placed part)
+- A yield percentage (placed area / total roll area)
+- A list of unplaced parts with the reason
+- A travel-path estimate for the cutter head
+- A full `layout_json` blob suitable for archival to `cut_history`
+
+The optimization target is **maximize yield** — minimize material waste — subject to a kerf constraint, an optional rotation constraint per part, and the roll boundary.
+
+## Two modes
+
+<Cards num={2}>
+  <Cards.Card title="Auto Nest" href="/cutting-engine/auto-nest">
+    Press Pack. The engine returns an optimized layout in 1–3 seconds. The default for production runs.
+  </Cards.Card>
+  <Cards.Card title="Free-roam" href="/cutting-engine/free-roam">
+    Manual placement on a live canvas with sub-millimeter snap. For specs that demand a human eye.
+  </Cards.Card>
+</Cards>
+
+## What's under the hood
+
+The engine is a Rust workspace with four crates:
+
+| Crate | Role |
+|---|---|
+| `rf-geometry` | Polygon primitives, kerf offset, rotation, AABB intersection |
+| `rf-layout` | Bin-packing algorithms — wraps [`jagua-rs`](https://github.com/JeroenGar/jagua-rs) for polygon nesting and adds the sparrow-style Guided Local Search metaheuristic |
+| `rf-types` | Shared serde-derive structs for stdin/stdout JSON contracts |
+| `pack-cli` | The standalone binary the Next.js server shells out to |
+
+The Next.js app does not link the Rust code directly. Instead, on every Pack request, the API route spawns a `pack-cli` subprocess, writes the request JSON to its stdin, and reads the response from stdout. This isolation means:
+
+- The Rust binary can ship independently of the web app
+- The same binary runs in CI for parity tests
+- The same binary will run in a future native desktop build without changing the algorithm
+
+## The pipeline
+
+For an Auto Nest request, `pack-cli` runs:
+
+1. **Parse** — deserialize the request, validate polygon winding and roll dimensions
+2. **Pre-pass** — apply kerf offset to every part polygon (Minkowski sum with a kerf-radius circle)
+3. **Initial solution** — greedy bottom-left-fill placement, sorted by area descending
+4. **Sparrow Guided Local Search** — iteratively perturb placements (swap, rotate, slide), accept improvements, escape local optima with a guidance penalty on frequently-perturbed regions
+5. **Final pass** — verify no overlaps, compute yield, serialize `layout_json`
+6. **Return** — write JSON to stdout, exit
+
+Typical iteration count for a 6 m² roll with 24 parts: **2,000–4,000** iterations in 2.4 seconds median wall time on a `c5.large`-equivalent CPU.
+
+## Audit guarantees
+
+Every committed pack writes to `cut_history` with:
+
+- `layout_json` — the full placement, replay-able into any future client
+- `engine_version` — the `pack-cli` semver from the running binary
+- `solve_time_ms` — wall time for the solve
+- `yield_pct` — the headline number
+- `operator_id`, `roll_id`, `job_id`
+- `created_at` — UTC timestamp
+
+This row cannot be deleted by `manager` or below. Corrections require a `super_admin` action, which itself writes to `audit_log` with `before_value` and `after_value` JSONB snapshots.
+
+<Callout type="info">
+The engine is deterministic for a given input + `engine_version`. Replay a `layout_json` against the same engine version and you get pixel-identical placements. This is what makes audit defensible.
+</Callout>
+
+## See also
+
+- [Auto Nest](/cutting-engine/auto-nest) — the default mode
+- [Free-roam](/cutting-engine/free-roam) — manual placement
+- [Performance](/cutting-engine/performance) — solve-time and yield benchmarks
+- [Cut history](/audit-history/cut-history) — what gets archived per pack

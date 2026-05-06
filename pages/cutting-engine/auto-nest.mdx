@@ -1,0 +1,98 @@
+---
+title: Auto Nest
+description: "Press Pack — the Rust engine returns an optimized layout in 1–3 seconds. The default cutting mode for every production run."
+---
+
+import { Callout } from 'nextra/components'
+
+# Auto Nest
+
+Auto Nest is the default cutting mode. Operators select a job, assign a roll, press **Pack**, and the engine returns an optimized layout in seconds.
+
+## When to use it
+
+Auto Nest is the right choice for ~95% of production runs. Use it whenever:
+
+- Parts are well-defined polygons (no operator interpretation required)
+- The roll has no defects
+- Standard kerf and rotation constraints apply
+- Production speed matters more than placement intuition
+
+For the remaining 5% — defects, custom orientations, rush jobs that need a specific layout — switch to [Free-roam](/cutting-engine/free-roam).
+
+## The request
+
+When you press Pack, the dashboard sends:
+
+```json
+{
+  "engine_version": "0.4.2",
+  "roll": {
+    "id": "r_abc123",
+    "usable_width_mm": 1500,
+    "usable_length_mm": 4000,
+    "kerf_mm": 1.5
+  },
+  "parts": [
+    { "id": "p_001", "polygon": [[0,0],[120,0],[120,80],[0,80]], "quantity": 4, "allow_rotation": true },
+    { "id": "p_002", "polygon": [[0,0],[200,0],[200,150],[0,150]], "quantity": 2, "allow_rotation": false }
+  ],
+  "constraints": {
+    "max_solve_seconds": 5,
+    "min_yield_target": 0.85
+  }
+}
+```
+
+`pack-cli` reads this from stdin and returns the layout on stdout.
+
+## The response
+
+```json
+{
+  "yield_pct": 92.4,
+  "solve_time_ms": 2380,
+  "iterations": 2104,
+  "placements": [
+    { "part_id": "p_001", "x_mm": 50, "y_mm": 50, "rotation_deg": 0, "instance": 1 },
+    { "part_id": "p_001", "x_mm": 175, "y_mm": 50, "rotation_deg": 90, "instance": 2 },
+    ...
+  ],
+  "unplaced": [],
+  "travel_path_mm": 14250
+}
+```
+
+The dashboard renders this as the SVG layout preview the operator sees before committing.
+
+## Constraints
+
+| Constraint | Default | Override |
+|---|---|---|
+| `max_solve_seconds` | 5 | Per request, capped at 30 |
+| `min_yield_target` | 0.85 | Per request — engine returns early if hit |
+| `kerf_mm` | Material default | Per job, per material |
+| `allow_rotation` | true | Per part — set on upload |
+| `max_iterations` | 5000 | Per request |
+
+If `min_yield_target` is reached before `max_solve_seconds`, the engine returns immediately. Otherwise it runs until time or iteration cap.
+
+## What happens on commit
+
+Pressing **Commit cut** in the UI sends `POST /api/cuts/commit` with the layout. The server:
+
+1. Validates that the layout still matches the current `roll.remaining_area`
+2. Inserts the cut into `cut_history` with the full `layout_json`
+3. Decrements `roll.remaining_area`
+4. Creates offcut records for any leftover area above the offcut threshold
+5. Releases the advisory lock acquired during solve
+
+<Callout type="warning">
+The advisory lock prevents two operators from packing the same roll simultaneously. If you see "Roll locked" when trying to pack, another operator is mid-solve. Wait 30 seconds and try again.
+</Callout>
+
+## See also
+
+- [Free-roam](/cutting-engine/free-roam) — when manual placement beats Auto
+- [Performance](/cutting-engine/performance) — solve-time benchmarks
+- [Cut history](/audit-history/cut-history) — the `layout_json` archive

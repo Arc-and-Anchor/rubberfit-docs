@@ -1,0 +1,47 @@
+---
+title: The six roles
+description: "super_admin, admin, manager, operator, viewer, customer — what each role can do, in plain English."
+---
+
+import { Callout } from 'nextra/components'
+
+# The six roles
+
+Rubberfit's RBAC matrix has six roles, ordered by privilege. Roles are stored on `auth.users.role` and enforced both in middleware and Postgres RLS policies.
+
+## The matrix
+
+| Role | Typical user | What they can do |
+|---|---|---|
+| `super_admin` | The owner — usually one person | Everything. Reads `audit_log`. Voids cuts. Changes workspace settings. |
+| `admin` | Operations leadership | Manage users, materials, suppliers, reorder rules. Cannot void cuts. Cannot read full `audit_log`. |
+| `manager` | Shift supervisors | Assign jobs, send POs, receive POs, quarantine rolls, set priorities. Cannot manage users or workspace settings. |
+| `operator` | Floor staff | Run cuts (Auto Nest + Free-roam), scan rolls and parts, claim unassigned jobs in their authorized materials. Cannot send POs. |
+| `viewer` | Auditors, accountants, board observers | Read-only across the dashboard. Cannot trigger any state change. |
+| `customer` | External — your customers | See their own jobs only via signed URLs. No login required for the basic PDF view; full account access available via invite. |
+
+## Enforcement
+
+Roles are enforced **twice** — once in middleware (Next.js `proxy.ts`) and once in Postgres RLS policies on every customer-facing table.
+
+The middleware check is fast: it gates routes by role before the request hits the database. Useful for redirecting an `operator` to `/dashboard` instead of `/dashboard/admin`.
+
+The RLS check is slow but airtight: even if the middleware is bypassed (a misconfigured proxy, a direct API call), the database still refuses to return rows the role can't see.
+
+This is **defense in depth** — two layers of enforcement that both have to fail before unauthorized data leaks.
+
+## Role transitions
+
+Only `super_admin` can promote a user above `manager`. `admin` can promote `viewer` → `operator` → `manager`, but cannot create another `admin` or `super_admin`.
+
+Every role change writes to `audit_log` with `before_value` and `after_value` JSONB snapshots.
+
+<Callout type="warning">
+There must always be at least one `super_admin` in a workspace. The dashboard prevents the last `super_admin` from demoting themselves; if you need to transfer ownership, promote a new `super_admin` first, then demote the old one.
+</Callout>
+
+## See also
+
+- [Permission matrix](/roles-rbac/permission-matrix) — exhaustive per-action breakdown
+- [Security posture](/security/posture) — RLS as the last line of defense
+- [Admin audit log](/audit-history/admin-audit-log)

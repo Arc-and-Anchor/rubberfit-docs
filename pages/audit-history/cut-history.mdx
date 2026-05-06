@@ -1,0 +1,88 @@
+---
+title: Cut history
+description: "Every cut session, replayable from the layout JSON. The audit table the engine writes after every commit."
+---
+
+import { Callout } from 'nextra/components'
+
+# Cut history
+
+Every committed cut writes a row to `cut_history`. This is the audit table that makes the engine defensible — replay any layout, reconstruct any session.
+
+## The cut history record
+
+`cut_history`:
+
+| Column | Notes |
+|---|---|
+| `id` | UUID |
+| `job_id` | FK to `jobs` |
+| `roll_id` | FK to `inventory.rolls` |
+| `operator_id` | FK to `auth.users` |
+| `engine_version` | The `pack-cli` semver from the running binary |
+| `mode` | `auto-nest` or `free-roam` |
+| `solve_time_ms` | Wall time for the solve (Auto Nest only) |
+| `iterations` | sparrow GLS iterations (Auto Nest only) |
+| `yield_pct` | Placed area / total roll area |
+| `placed_part_count` | Total parts in the layout |
+| `unplaced_part_count` | Parts that didn't fit |
+| `layout_json` | Full placement, replayable into the engine |
+| `created_at` | UTC timestamp |
+
+## Replay
+
+Given a `cut_history.id`, you can replay the cut:
+
+```bash
+curl https://app.rubberfit.app/api/cuts/<id>/replay \
+  -H "Authorization: Bearer <token>"
+```
+
+This returns the original `layout_json` and an SVG render. Useful for:
+
+- Quality reviews: "show me the layout that was cut on this roll"
+- Customer disputes: "this is exactly what we cut"
+- Engine validation: "did the engine version we shipped last week regress on this case?"
+
+The replay is **deterministic** for a given `engine_version` and `layout_json` — re-running the engine on the same input produces an identical placement.
+
+## Querying
+
+Some common queries:
+
+```sql
+-- Yield trend over time
+SELECT date_trunc('day', created_at) AS day,
+       avg(yield_pct) AS avg_yield
+FROM cut_history
+WHERE created_at > NOW() - INTERVAL '90 days'
+GROUP BY day
+ORDER BY day;
+
+-- Operator efficiency comparison
+SELECT operator_id, count(*), avg(yield_pct), avg(solve_time_ms)
+FROM cut_history
+WHERE created_at > NOW() - INTERVAL '30 days'
+GROUP BY operator_id;
+
+-- Material yield comparison
+SELECT r.material_id, count(*), avg(ch.yield_pct)
+FROM cut_history ch
+JOIN inventory.rolls r ON r.id = ch.roll_id
+GROUP BY r.material_id;
+```
+
+## Retention
+
+Cut history rows are **never deleted automatically**. They persist for the lifetime of the workspace. Storage cost is negligible — a typical workspace generates ~30 KB of cut-history rows per day.
+
+If a cut needs to be voided (rare; only for audit corrections), a `super_admin` can mark `voided_at` on the row. The row itself remains, ensuring the audit trail is complete.
+
+<Callout type="info">
+Cut history is the canonical record. The cut list printout, the customer PDF, and any operator screen are derived views — if they ever disagree with `cut_history`, `cut_history` wins.
+</Callout>
+
+## See also
+
+- [Cutting engine overview](/cutting-engine/overview)
+- [Admin audit log](/audit-history/admin-audit-log)

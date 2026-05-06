@@ -1,0 +1,57 @@
+---
+title: Reorder rules
+description: "Per-material reorder thresholds and preferred suppliers. The engine fires notifications before stock-out, not after."
+---
+
+import { Callout } from 'nextra/components'
+
+# Reorder rules
+
+Reorder rules are the bridge between `inventory.rolls` and [purchase orders](/inventory/purchase-orders). Each rule says "when material X drops below Y, draft a PO against supplier Z for quantity W."
+
+## The rule record
+
+`inventory.reorder_rules`:
+
+| Column | Notes |
+|---|---|
+| `material_id` | FK, unique — one rule per material |
+| `threshold_area_mm2` | Sum of `remaining_area` across active rolls + available offcuts |
+| `reorder_quantity_mm2` | What to draft on the PO |
+| `preferred_supplier_id` | FK to `inventory.suppliers` |
+| `enabled` | Boolean; rules can be paused without deletion |
+
+## How they fire
+
+A Postgres trigger on `inventory.rolls` and `inventory.offcuts` runs after every commit and PO receipt. The trigger:
+
+1. Computes the new `material_active_area` for every material involved in the change
+2. Compares against `reorder_rules.threshold_area_mm2`
+3. If the threshold is crossed (active area dropped below it), inserts a notification
+
+The notification is in-app only — it doesn't draft the PO automatically. A manager reviews the notification, confirms supplier choice and quantity, then drafts the PO.
+
+## Why it's a notification, not auto-draft
+
+We considered auto-drafting POs and decided against it:
+
+- Suppliers change pricing; a stale `preferred_supplier_id` could lock in a worse rate
+- Operators sometimes have non-system context (a known shipment in transit, a one-time bulk order) that should override the rule
+- Fully autonomous procurement is a much bigger trust surface than auto-notification
+
+The rule fires the alert. A human chooses what to do.
+
+<Callout type="info">
+Reorder rules are evaluated against the **sum** of `remaining_area` across all active rolls + available offcuts of that material. Offcut bank counts toward stock; this is intentional — a 50 m² offcut bank is real material, not scrap.
+</Callout>
+
+## Tuning
+
+A good threshold is **lead time × peak daily consumption**, with a safety buffer. If your supplier delivers in 14 days and you cut up to 8 m² of this material per day, set the threshold around 130–150 m² to leave safety stock.
+
+## See also
+
+- [Rolls](/inventory/rolls)
+- [Offcuts](/inventory/offcuts)
+- [Purchase orders](/inventory/purchase-orders)
+- [Suppliers](/inventory/suppliers)

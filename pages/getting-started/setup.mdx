@@ -1,0 +1,81 @@
+---
+title: Workspace setup
+description: "Configure your Rubberfit workspace — invite the team, set roles, define materials and suppliers, and establish defaults before the first production run."
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Workspace setup
+
+A new Rubberfit workspace ships empty. This page walks an admin through the order of operations to get from "fresh signup" to "operators can run cuts."
+
+## 1. Organization settings
+
+`/dashboard/admin/settings`. Set:
+
+- **Timezone** — propagates to job due dates, `purchase_orders` timestamps, audit-log entries
+- **Default units** — `mm` or `in`. Roll dimensions, part sizes, and yield calculations use this
+- **Notification preferences** — workspace-wide defaults; users can override per-account
+- **Workspace logo** — appears on customer-facing PDFs (job receipts, invoices)
+
+Super-admin settings override per-user date formatting.
+
+## 2. Invite the team
+
+`/dashboard/admin/users`. Click **Invite** and enter an email + role. The invite email contains a magic link that expires in 24 hours.
+
+Roles in order of privilege:
+
+| Role | Typical user |
+|---|---|
+| `super_admin` | One person — the owner |
+| `admin` | Operations leadership |
+| `manager` | Shift supervisors |
+| `operator` | Floor staff |
+| `viewer` | Read-only auditors / accountants |
+| `customer` | External — sees their own jobs only |
+
+See [the six roles](/roles-rbac/the-six-roles) for what each can do.
+
+## 3. Define materials
+
+`/dashboard/inventory/materials`. Each material has:
+
+- **Name + SKU** — what operators see in the cut queue
+- **Durometer** — for rubber-roll fabricators, the Shore A hardness
+- **Thickness, density, and price-per-square-meter** — used in cost-per-cut calculations
+- **Default kerf** — operators can override per job
+
+You cannot receive a roll without first defining its material.
+
+## 4. Add suppliers
+
+`/dashboard/inventory/suppliers`. For each supplier:
+
+- Name, primary contact, payment terms
+- Materials they supply (many-to-many — a supplier can carry several materials)
+- Lead time in days
+
+Supplier records back the [purchase order](/inventory/purchase-orders) workflow.
+
+## 5. Set reorder rules
+
+For each material, configure a [reorder rule](/inventory/reorder-rules) with:
+
+- **Threshold area (m²)** — when the sum of `remaining_area` across active rolls drops below this, a notification fires
+- **Preferred supplier** — the system drafts a PO against this supplier when the threshold is crossed
+- **Reorder quantity (m²)** — how much to draft
+
+<Callout type="info">
+Reorder rules are optional but recommended. They turn stock-out events into pre-emptive POs.
+</Callout>
+
+## 6. Run a test cut
+
+Receive a test roll, create a test job with one or two parts, run [your first cut](/getting-started/first-cut). This validates that materials → rolls → jobs → engine round-trips work before you bring real customer orders into the system.
+
+## See also
+
+- [The six roles](/roles-rbac/the-six-roles)
+- [Inventory rolls](/inventory/rolls)
+- [Reorder rules](/inventory/reorder-rules)

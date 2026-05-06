@@ -1,0 +1,72 @@
+---
+title: Common issues
+description: "Pack failures, scan resolution, login redirects, low-stock false positives, and other things that go wrong."
+---
+
+import { Callout } from 'nextra/components'
+
+# Common issues
+
+Things that go wrong, and what to do about them.
+
+## "Pack failed: roll locked"
+
+**Cause:** Another operator is mid-solve on the same roll. The Postgres advisory lock blocks concurrent packs.
+
+**Fix:** Wait 30 seconds and retry. If the lock doesn't release after a minute, the previous solver crashed — the lock auto-releases on connection drop, but check `/dashboard/admin/locks` (super_admin only) for stuck entries.
+
+## "Pack returned 0 placed parts"
+
+**Cause:** Every part is too large for the assigned roll, or kerf is too aggressive.
+
+**Fix:**
+
+1. Verify the roll's `usable_width` and `usable_length` against the largest part dimension
+2. Check the material's default kerf — a kerf of 5 mm on small parts can prevent placement
+3. If the parts are correct, assign a larger roll
+
+## Scanner returns "Barcode not recognized"
+
+**Cause:** The barcode encodes a UUID that's not in `inventory.rolls`, `inventory.offcuts`, or `jobs`.
+
+**Fix:**
+
+- If the barcode is on a roll you just received but the system shows nothing, the PO line wasn't marked received yet
+- If the barcode is from an old session, the entity may have been deleted (this is rare; soft-deletes are the default)
+- If the camera misread, retry — Code 128 has high error rate on scratched labels
+
+## Login redirects to `/login?redirectTo=%2F`
+
+**Cause:** Session cookie expired or invalid.
+
+**Fix:** Sign in again. Sessions last 7 days by default; the `Remember me` checkbox extends to 30 days. If you're being kicked out faster than that, your browser is rejecting the session cookie — check that `dashboard.rubberfit.app` cookies aren't blocked.
+
+## Low-stock notification fires immediately after a PO
+
+**Cause:** The reorder rule's threshold is higher than the receive quantity.
+
+**Fix:**
+
+- Check `inventory.reorder_rules.threshold_area_mm2` against `purchase_orders.quantity_received_m2`
+- If the PO was a partial receipt, the threshold check fires after each partial — wait until the full PO is received
+- If the threshold is wrong (e.g., set to 200 m² when typical receipts are 100 m²), tune the rule
+
+## Customer PDF link expired
+
+**Cause:** Signed URLs default to a 1-year expiry. After that, the URL stops resolving.
+
+**Fix:** A manager+ can rotate the URL from `/dashboard/jobs/[id]` → **Regenerate PDF link**. The new URL emails the customer automatically.
+
+## Engine returns "engine_version mismatch"
+
+**Cause:** A `cut_history` replay is being run against an engine version that no longer exists in the running binary.
+
+**Fix:** Replay against an older binary, or accept that the placement may differ slightly. Engine versions are forward-compatible for layout reads but not for solver replay.
+
+<Callout type="warning">
+If you hit something not in this list, email `hello@rubberfit.app` with the timestamp and the operator's email. We respond within 1 business day.
+</Callout>
+
+## See also
+
+- [Contact support](/troubleshooting/contact-support)
