@@ -22,13 +22,19 @@ A Rubberfit job moves through five states. Each transition is recorded with the 
 
 ## State transitions
 
+`pending → in_progress` happens automatically when a roll is assigned. `in_progress → completed` happens automatically when the last part is scanned cut. `completed → shipped` requires a manual action — the shipping team scans the job barcode at the loading dock, and the system flips the status. Any state can transition to `cancelled` (with a manager+ role and a reason note).
+
 <StateMachine
   layout="vertical"
-  states={["pending", "in_progress", "completed", "shipped"]}
-  label="Job lifecycle vertical state stack: pending → in_progress → completed → shipped, with a side branch to cancelled"
+  states={[
+    { name: "pending", type: "past" },
+    { name: "in_progress", type: "current" },
+    { name: "completed", type: "future" },
+    { name: "shipped", type: "future" },
+  ]}
+  captionNumber="Fig. 1"
+  caption="The default flow is top-down. Cancellation is reachable from any state and is its own terminal."
 />
-
-`pending → in_progress` happens automatically when a roll is assigned. `in_progress → completed` happens automatically when the last part is scanned cut. `completed → shipped` requires a manual action — the shipping team scans the job barcode at the loading dock, and the system flips the status. Any state can transition to `cancelled` (with a manager+ role and a reason note).
 
 ## The job record
 

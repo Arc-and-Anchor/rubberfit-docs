@@ -10,14 +10,6 @@ import { StateMachine } from '../../components/figures'
 
 POs in Rubberfit move through five states: `draft`, `sent`, `partially_received`, `received`, and `cancelled`. Receipt automatically creates `inventory.rolls` records — no manual data entry, no double keying.
 
-<StateMachine
-  layout="branching"
-  states={["Draft", "Sent", "Partial", "Received"]}
-  branchIndex={1}
-  branchLabel="Cancelled"
-  label="Purchase order lifecycle: four-state main path with a cancelled exit from sent"
-/>
-
 ## The PO record
 
 `purchase_orders`:
@@ -83,6 +75,20 @@ A PO can be partially received multiple times. The status flips to `received` on
 Drafts can be cancelled freely. Sent POs can be cancelled with a note (recorded in `admin.admin_activity_log`). Received POs cannot be cancelled — corrections require a new PO with negative quantities.
 
 </Steps>
+
+<StateMachine
+  layout="branching"
+  states={[
+    { name: "Draft", type: "past" },
+    { name: "Sent", type: "current" },
+    { name: "Partial", type: "future" },
+    { name: "Received", type: "future" },
+  ]}
+  branchAfterIndex={1}
+  branchLabel="Cancelled"
+  captionNumber="Fig. 1"
+  caption="The main path is left to right. Cancellation is a dashed exception spur reachable only from the Sent state."
+/>
 
 <Callout type="info">
 Auto-roll creation on receipt is the single biggest workflow accelerator in Rubberfit. A 10-line PO that would take 30 minutes of manual roll entry collapses into one **Receive all** click.

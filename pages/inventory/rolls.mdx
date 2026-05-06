@@ -28,12 +28,6 @@ The `inventory.rolls` table backs every roll. Key columns:
 
 ## Lifecycle
 
-<StateMachine
-  layout="linear"
-  states={["Receive", "Active", "Cut", "Retire", "Quarantine"]}
-  label="Roll lifecycle states from receipt through retirement"
-/>
-
 <Steps>
 
 ### Receive
@@ -65,6 +59,19 @@ When `remaining_area_mm2` falls below the offcut threshold, the roll is automati
 Operators can manually transition a roll to `quarantine` if they spot a defect. Quarantined rolls hold their `remaining_area` but are excluded from job assignment until a manager unblocks them.
 
 </Steps>
+
+<StateMachine
+  layout="linear"
+  states={[
+    { name: "Receive", type: "past" },
+    { name: "Active", type: "current" },
+    { name: "Cut", type: "future" },
+    { name: "Retire", type: "future" },
+    { name: "Quarantine", type: "future" },
+  ]}
+  captionNumber="Fig. 1"
+  caption="A roll moves left to right under normal flow; quarantine is a side state any active roll can enter."
+/>
 
 ## Lineage
 

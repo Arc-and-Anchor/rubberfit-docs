@@ -1,85 +1,111 @@
 "use client"
 
-import { motion, type Variants } from "framer-motion"
+import { motion } from "framer-motion"
+import { FIGURE_FONT, FIGURE_TOKENS } from "./figure-tokens"
+import { Caption } from "./Caption"
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.2 } },
+type Milestone = {
+  quarter: string
+  headline: string
+  type: "past" | "current" | "future"
 }
 
-const diamondVariants: Variants = {
-  hidden: { scale: 0, opacity: 0 },
-  show: {
-    scale: 1,
-    opacity: 1,
-    transition: { type: "spring", stiffness: 220, damping: 18 },
-  },
-}
-
-const progressVariants: Variants = {
-  hidden: { scaleX: 0 },
-  show: { scaleX: 1, transition: { duration: 1.1, ease: "easeOut", delay: 0.4 } },
-}
+const ROW_Y = 30
+const SIDE_PAD = 60
+const COL_W = 130
+const HALF = 14
 
 export function DiamondTrack({
-  marks,
-  activeIndex = 0,
-  label,
+  milestones,
+  caption,
+  captionNumber,
 }: {
-  marks: string[]
-  activeIndex?: number
-  label: string
+  milestones: Milestone[]
+  caption?: React.ReactNode
+  captionNumber?: string
 }) {
-  const safeIndex = Math.max(0, Math.min(activeIndex, marks.length - 1))
-  const positions = marks.map((_, i) => 60 + i * 120)
+  const totalW = SIDE_PAD * 2 + (milestones.length - 1) * COL_W
+  const totalH = ROW_Y + 80
+  const xs = milestones.map((_, i) => SIDE_PAD + i * COL_W)
+
   return (
-    <figure aria-label={label} className="figure-shell">
+    <figure className="figure">
       <motion.svg
-        viewBox="0 0 520 80"
-        fill="none"
+        viewBox={`0 0 ${totalW} ${totalH}`}
         className="figure-svg"
         initial="hidden"
-        whileInView="show"
+        whileInView="visible"
         viewport={{ once: true, margin: "-80px" }}
-        variants={containerVariants}
       >
-        <line
-          x1={30}
-          y1={40}
-          x2={490}
-          y2={40}
-          stroke="currentColor"
-          strokeWidth={2}
-          opacity={0.2}
-        />
-        {positions.map((x, i) => {
-          const isActive = i === safeIndex
+        {milestones.slice(0, -1).map((_, i) => (
+          <motion.line
+            key={`c-${i}`}
+            x1={xs[i] + HALF}
+            y1={ROW_Y}
+            x2={xs[i + 1] - HALF}
+            y2={ROW_Y}
+            stroke={FIGURE_TOKENS.connector}
+            strokeWidth={2}
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { delay: i * 0.1 + 0.2, duration: 0.3 },
+              },
+            }}
+          />
+        ))}
+        {milestones.map((m, i) => {
+          const style = FIGURE_TOKENS[m.type]
+          const dasharray = style.dasharray
+          const quarterColor = m.type === "current" ? "#ee5a24" : "rgba(246,245,242,0.85)"
           return (
-            <motion.path
-              key={i}
-              d={`M${x} 40 l12 -12 l12 12 l-12 12 z`}
-              fill={isActive ? "#ee5a24" : "transparent"}
-              stroke={isActive ? "transparent" : "currentColor"}
-              strokeWidth={2}
-              variants={diamondVariants}
-            />
+            <motion.g
+              key={m.quarter}
+              variants={{
+                hidden: { opacity: 0, y: 6 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { delay: i * 0.1, duration: 0.4 },
+                },
+              }}
+            >
+              <path
+                d={`M ${xs[i]} ${ROW_Y - HALF} L ${xs[i] + HALF} ${ROW_Y} L ${xs[i]} ${ROW_Y + HALF} L ${xs[i] - HALF} ${ROW_Y} Z`}
+                fill={style.fill}
+                stroke={style.stroke}
+                strokeWidth={2}
+                strokeDasharray={dasharray}
+                strokeLinejoin="round"
+              />
+              <text
+                x={xs[i]}
+                y={ROW_Y + HALF + 22}
+                fontFamily={FIGURE_FONT}
+                fontSize={13}
+                fontWeight={600}
+                fill={quarterColor}
+                textAnchor="middle"
+              >
+                {m.quarter}
+              </text>
+              <text
+                x={xs[i]}
+                y={ROW_Y + HALF + 40}
+                fontFamily={FIGURE_FONT}
+                fontSize={11}
+                fontWeight={500}
+                fill="rgba(246,245,242,0.6)"
+                textAnchor="middle"
+              >
+                {m.headline}
+              </text>
+            </motion.g>
           )
         })}
-        <motion.rect
-          x={30}
-          y={62}
-          width={Math.max(0, positions[safeIndex] - 18)}
-          height={3}
-          rx={1.5}
-          fill="#ee5a24"
-          opacity={0.35}
-          style={{ transformOrigin: "left center" }}
-          variants={progressVariants}
-        />
       </motion.svg>
-      <figcaption className="sr-only">
-        {marks.map((m, i) => `${m}${i === activeIndex ? " (current)" : ""}`).join(", ")}
-      </figcaption>
+      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
     </figure>
   )
 }

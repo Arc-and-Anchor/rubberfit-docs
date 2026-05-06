@@ -1,88 +1,115 @@
 "use client"
 
-import { motion, type Variants } from "framer-motion"
+import { motion } from "framer-motion"
+import { FIGURE_FONT } from "./figure-tokens"
+import { Caption } from "./Caption"
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
-}
+const NODE_R = 14
+const TOP = 28
+const LABEL_Y = TOP + NODE_R + 22
+const SIDE_PAD = 24
+const ACCENT = "#ee5a24"
+const TRACK = "rgba(246,245,242,0.18)"
+const NODE_STROKE = "rgba(246,245,242,0.45)"
+const NODE_FILL = "rgba(246,245,242,0.04)"
+const LABEL_COLOR = "rgba(246,245,242,0.7)"
+const ACTIVE_LABEL = "#ee5a24"
+const ACTIVE_NUM = "#0F1216"
 
-const stationVariants: Variants = {
-  hidden: { scale: 0, opacity: 0 },
-  show: {
-    scale: 1,
-    opacity: 1,
-    transition: { type: "spring", stiffness: 250, damping: 20 },
-  },
-}
+export function StepRail({
+  steps,
+  activeIndex = 0,
+  caption,
+  captionNumber,
+}: {
+  steps: string[]
+  activeIndex?: number
+  caption?: React.ReactNode
+  captionNumber?: string
+}) {
+  const safeIndex = Math.max(0, Math.min(activeIndex, steps.length - 1))
+  const COL_W = 110
+  const totalW = SIDE_PAD * 2 + (steps.length - 1) * COL_W
+  const totalH = LABEL_Y + 12
+  const xs = steps.map((_, i) => SIDE_PAD + i * COL_W)
 
-const puckVariants: Variants = {
-  hidden: { x: -8, opacity: 0 },
-  show: {
-    x: [-8, 97, 202, 307, 412],
-    opacity: [0, 1, 1, 1, 1],
-    transition: { duration: 3, ease: "easeInOut", repeat: Infinity, repeatDelay: 1 },
-  },
-}
-
-export function StepRail({ steps, label }: { steps: string[]; label: string }) {
-  const stationXs = steps.map((_, i) => 50 + i * 105)
   return (
-    <figure aria-label={label} className="figure-shell">
+    <figure className="figure">
       <motion.svg
-        viewBox="0 0 500 70"
-        fill="none"
+        viewBox={`0 0 ${totalW} ${totalH}`}
         className="figure-svg"
         initial="hidden"
-        whileInView="show"
+        whileInView="visible"
         viewport={{ once: true, margin: "-80px" }}
-        variants={containerVariants}
       >
-        <line
-          x1={30}
-          y1={35}
-          x2={470}
-          y2={35}
-          stroke="currentColor"
-          strokeWidth={2}
-          strokeDasharray="6 6"
-          opacity={0.3}
+        <motion.line
+          x1={xs[0]}
+          y1={TOP}
+          x2={xs[xs.length - 1]}
+          y2={TOP}
+          stroke={TRACK}
+          strokeWidth={3}
+          strokeLinecap="round"
+          variants={{
+            hidden: { pathLength: 0 },
+            visible: { pathLength: 1, transition: { duration: 0.6 } },
+          }}
         />
-        {stationXs.map((x, i) => (
-          <motion.circle
-            key={i}
-            cx={x}
-            cy={35}
-            r={10}
-            stroke="#ee5a24"
-            strokeWidth={2}
-            fill="transparent"
-            variants={stationVariants}
-          />
-        ))}
-        {stationXs.map((x, i) => (
-          <circle
-            key={i}
-            cx={x}
-            cy={35}
-            r={3}
-            fill="#ee5a24"
-            opacity={i === 0 ? 1 : 0.3}
-          />
-        ))}
-        <motion.rect
-          x={50}
-          y={52}
-          width={16}
-          height={5}
-          rx={2.5}
-          fill="#ee5a24"
-          variants={puckVariants}
-        />
+        {steps.map((s, i) => {
+          const isActive = i === safeIndex
+          const isPast = i < safeIndex
+          const fill = isActive ? ACCENT : NODE_FILL
+          const stroke = isActive || isPast ? ACCENT : NODE_STROKE
+          const numColor = isActive ? ACTIVE_NUM : "rgba(246,245,242,0.85)"
+          const labelColor = isActive ? ACTIVE_LABEL : LABEL_COLOR
+          return (
+            <motion.g
+              key={s}
+              variants={{
+                hidden: { opacity: 0, scale: 0.8 },
+                visible: {
+                  opacity: 1,
+                  scale: 1,
+                  transition: { delay: i * 0.08, duration: 0.3 },
+                },
+              }}
+            >
+              <circle
+                cx={xs[i]}
+                cy={TOP}
+                r={NODE_R}
+                fill={fill}
+                stroke={stroke}
+                strokeWidth={2}
+              />
+              <text
+                x={xs[i]}
+                y={TOP}
+                fontFamily={FIGURE_FONT}
+                fontSize={11}
+                fontWeight={600}
+                fill={numColor}
+                dominantBaseline="middle"
+                textAnchor="middle"
+              >
+                {i + 1}
+              </text>
+              <text
+                x={xs[i]}
+                y={LABEL_Y}
+                fontFamily={FIGURE_FONT}
+                fontSize={11}
+                fontWeight={500}
+                fill={labelColor}
+                textAnchor="middle"
+              >
+                {s}
+              </text>
+            </motion.g>
+          )
+        })}
       </motion.svg>
-      <figcaption className="sr-only">
-        {steps.map((s, i) => `${i + 1}. ${s}`).join(", ")}
-      </figcaption>
+      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
     </figure>
   )
 }

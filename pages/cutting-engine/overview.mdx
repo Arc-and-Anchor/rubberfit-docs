@@ -3,17 +3,17 @@ title: Cutting engine overview
 description: "How the Rust + jagua-rs + sparrow GLS pipeline plans cuts on every Pack request. Two modes, one engine, one audit trail."
 ---
 
-import { Callout, Cards } from 'nextra/components'
-import { Pipeline } from '../../components/figures'
+import { Callout } from 'nextra/components'
+import {
+  Pipeline,
+  NextStepsCards,
+  IconAutoNest,
+  IconFreeRoamCanvas,
+} from '../../components/figures'
 
 # Cutting engine overview
 
 Rubberfit's cutting engine is the most differentiated piece of the platform. It is a real Rust workspace — not a Python notebook, not a wrapper around a CAD plugin — and it runs on every **Pack** request from the dashboard.
-
-<Pipeline
-  stages={["Parse", "Pre-pass", "Initial", "Sparrow GLS", "Verify", "Yield", "Emit"]}
-  label="Seven-stage Rust pack-cli pipeline from request to layout JSON"
-/>
 
 ## What the engine does
 
@@ -29,14 +29,22 @@ The optimization target is **maximize yield** — minimize material waste — su
 
 ## Two modes
 
-<Cards num={2}>
-  <Cards.Card title="Auto Nest" href="/cutting-engine/auto-nest">
-    Press Pack. The engine returns an optimized layout in 1–3 seconds. The default for production runs.
-  </Cards.Card>
-  <Cards.Card title="Free-roam" href="/cutting-engine/free-roam">
-    Manual placement on a live canvas with sub-millimeter snap. For specs that demand a human eye.
-  </Cards.Card>
-</Cards>
+<NextStepsCards
+  items={[
+    {
+      title: "Auto Nest",
+      description: "Press Pack. The engine returns an optimized layout in 1–3 seconds. The default for production runs.",
+      href: "/cutting-engine/auto-nest",
+      icon: <IconAutoNest />,
+    },
+    {
+      title: "Free-roam",
+      description: "Manual placement on a live canvas with sub-millimeter snap. For specs that demand a human eye.",
+      href: "/cutting-engine/free-roam",
+      icon: <IconFreeRoamCanvas />,
+    },
+  ]}
+/>
 
 ## What's under the hood
 
@@ -67,6 +75,20 @@ For an Auto Nest request, `pack-cli` runs:
 6. **Return** — write JSON to stdout, exit
 
 Typical iteration count for a 6 m² roll with 24 parts: **2,000–4,000** iterations in 2.4 seconds median wall time on a `c5.large`-equivalent CPU.
+
+<Pipeline
+  stages={[
+    { index: "01", name: "Parse" },
+    { index: "02", name: "Pre-pass" },
+    { index: "03", name: "Initial" },
+    { index: "04", name: "Sparrow GLS", active: true },
+    { index: "05", name: "Verify" },
+    { index: "06", name: "Yield" },
+    { index: "07", name: "Emit" },
+  ]}
+  captionNumber="Fig. 1"
+  caption="Seven-stage pack-cli pipeline. Stage 04 is where most of the wall-clock time lives."
+/>
 
 ## Audit guarantees
 

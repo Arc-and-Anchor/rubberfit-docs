@@ -1,228 +1,368 @@
 "use client"
 
-import { motion, type Variants } from "framer-motion"
+import { motion } from "framer-motion"
+import { FIGURE_FONT, FIGURE_TOKENS, type FigureNodeType } from "./figure-tokens"
+import { Caption } from "./Caption"
 
-type LinearLayout = {
+type State = {
+  name: string
+  type: Extract<FigureNodeType, "past" | "current" | "future">
+}
+
+type LinearProps = {
   layout: "linear"
-  states: string[]
-  activeIndex?: number
+  states: State[]
+  caption?: React.ReactNode
+  captionNumber?: string
 }
 
-type VerticalLayout = {
+type VerticalProps = {
   layout: "vertical"
-  states: string[]
-  activeIndex?: number
+  states: State[]
+  caption?: React.ReactNode
+  captionNumber?: string
 }
 
-type BranchingLayout = {
+type BranchingProps = {
   layout: "branching"
-  states: string[]
-  branchIndex: number
+  states: State[]
+  branchAfterIndex: number
   branchLabel: string
-  activeIndex?: number
+  caption?: React.ReactNode
+  captionNumber?: string
 }
 
-export type StateMachineProps = LinearLayout | VerticalLayout | BranchingLayout
+export type StateMachineProps = LinearProps | VerticalProps | BranchingProps
 
-const ACCENT = "#ee5a24"
+const LINEAR_NODE_W = 96
+const LINEAR_NODE_H = 36
+const LINEAR_GAP = 16
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.15 } },
-}
+const VERTICAL_NODE_W = 168
+const VERTICAL_NODE_H = 36
+const VERTICAL_GAP = 18
 
-const pillVariants: Variants = {
-  hidden: { scale: 0.85, opacity: 0 },
-  show: {
-    scale: 1,
-    opacity: 1,
-    transition: { type: "spring", stiffness: 220, damping: 22 },
-  },
-}
+const BRANCHING_NODE_W = 88
+const BRANCHING_NODE_H = 32
+const BRANCHING_GAP = 18
+const BRANCHING_SPUR_Y = 92
 
-const branchVariants: Variants = {
-  hidden: { y: -8, opacity: 0 },
-  show: { y: 0, opacity: 1, transition: { delay: 0.7, duration: 0.4 } },
+function NodeStyle(type: FigureNodeType) {
+  return FIGURE_TOKENS[type]
 }
 
 export function StateMachine(props: StateMachineProps) {
-  const activeIndex = props.activeIndex ?? 0
-
   if (props.layout === "vertical") {
-    const { states } = props
-    const rowHeight = 54
-    const totalHeight = states.length * rowHeight + 4
-    return (
-      <figure
-        aria-label={`State diagram: ${states.join(" → ")}`}
-        className="figure-shell"
-      >
-        <motion.svg
-          viewBox={`0 0 220 ${totalHeight}`}
-          fill="none"
-          className="figure-svg"
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-80px" }}
-          variants={containerVariants}
-        >
-          {states.map((_, i) => {
-            const y = i * rowHeight + 4
-            const isActive = i === activeIndex
-            return (
-              <motion.g key={i} variants={pillVariants}>
-                <rect
-                  x={20}
-                  y={y}
-                  width={180}
-                  height={32}
-                  rx={6}
-                  fill={isActive ? ACCENT : "transparent"}
-                  stroke={isActive ? "transparent" : "currentColor"}
-                  strokeWidth={2}
-                />
-                {i < states.length - 1 ? (
-                  <path
-                    d={`M110 ${y + 36} v${rowHeight - 36 - 4}`}
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    opacity={0.3}
-                  />
-                ) : null}
-              </motion.g>
-            )
-          })}
-        </motion.svg>
-        <figcaption className="sr-only">
-          {states.map((s, i) => `${i + 1}. ${s}`).join(", ")}
-        </figcaption>
-      </figure>
-    )
+    return <Vertical {...props} />
   }
-
   if (props.layout === "branching") {
-    const { states, branchIndex, branchLabel } = props
-    const colWidth = 110
-    const totalWidth = states.length * colWidth + 20
-    const branchPillX = branchIndex * colWidth + 30
-    return (
-      <figure
-        aria-label={`State diagram: ${states.join(" → ")} with branch to ${branchLabel}`}
-        className="figure-shell"
-      >
-        <motion.svg
-          viewBox={`0 0 ${totalWidth} 130`}
-          fill="none"
-          className="figure-svg"
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-80px" }}
-          variants={containerVariants}
-        >
-          <line
-            x1={30}
-            y1={35}
-            x2={(states.length - 1) * colWidth + 90}
-            y2={35}
-            stroke="currentColor"
-            strokeWidth={2}
-            opacity={0.2}
-          />
-          {states.map((_, i) => {
-            const x = i * colWidth + 30
-            const isActive = i === activeIndex
-            return (
-              <motion.rect
-                key={i}
-                x={x}
-                y={23}
-                width={70}
-                height={24}
-                rx={12}
-                fill={isActive ? ACCENT : "transparent"}
-                stroke={isActive ? "transparent" : "currentColor"}
-                strokeWidth={2}
-                variants={pillVariants}
-              />
-            )
-          })}
-          <motion.path
-            d={`M${branchPillX + 35} 47 v25`}
-            stroke="currentColor"
-            strokeWidth={2}
-            opacity={0.3}
-            variants={branchVariants}
-          />
-          <motion.rect
-            x={branchPillX}
-            y={80}
-            width={70}
-            height={24}
-            rx={12}
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeDasharray="3 3"
-            fill="transparent"
-            variants={branchVariants}
-          />
-        </motion.svg>
-        <figcaption className="sr-only">
-          {states.map((s, i) => `${i + 1}. ${s}`).join(", ")}; branch from{" "}
-          {states[branchIndex]} to {branchLabel}
-        </figcaption>
-      </figure>
-    )
+    return <Branching {...props} />
   }
+  return <Linear {...props} />
+}
 
-  // linear
-  const { states } = props
-  const colWidth = 110
-  const totalWidth = states.length * colWidth + 20
+function Linear({ states, caption, captionNumber }: LinearProps) {
+  const totalW = states.length * LINEAR_NODE_W + (states.length - 1) * LINEAR_GAP
+  const totalH = LINEAR_NODE_H + 4
+
   return (
-    <figure
-      aria-label={`State diagram: ${states.join(" → ")}`}
-      className="figure-shell"
-    >
+    <figure className="figure">
       <motion.svg
-        viewBox={`0 0 ${totalWidth} 70`}
-        fill="none"
+        viewBox={`0 0 ${totalW} ${totalH}`}
         className="figure-svg"
         initial="hidden"
-        whileInView="show"
+        whileInView="visible"
         viewport={{ once: true, margin: "-80px" }}
-        variants={containerVariants}
       >
-        <line
-          x1={30}
-          y1={35}
-          x2={(states.length - 1) * colWidth + 90}
-          y2={35}
-          stroke="currentColor"
-          strokeWidth={2}
-          opacity={0.2}
-        />
-        {states.map((_, i) => {
-          const x = i * colWidth + 30
-          const isActive = i === activeIndex
+        {states.slice(0, -1).map((_, i) => {
+          const x1 = (i + 1) * LINEAR_NODE_W + i * LINEAR_GAP
+          const x2 = (i + 1) * (LINEAR_NODE_W + LINEAR_GAP)
           return (
-            <motion.rect
-              key={i}
-              x={x}
-              y={23}
-              width={70}
-              height={24}
-              rx={12}
-              fill={isActive ? ACCENT : "transparent"}
-              stroke={isActive ? "transparent" : "currentColor"}
+            <motion.line
+              key={`c-${i}`}
+              x1={x1}
+              y1={LINEAR_NODE_H / 2}
+              x2={x2}
+              y2={LINEAR_NODE_H / 2}
+              stroke={FIGURE_TOKENS.connector}
               strokeWidth={2}
-              variants={pillVariants}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { delay: i * 0.07 + 0.18, duration: 0.3 },
+                },
+              }}
             />
           )
         })}
+        {states.map((s, i) => {
+          const x = i * (LINEAR_NODE_W + LINEAR_GAP)
+          const style = NodeStyle(s.type)
+          return (
+            <motion.g
+              key={s.name}
+              variants={{
+                hidden: { opacity: 0, y: 6 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { delay: i * 0.07, duration: 0.4 },
+                },
+              }}
+            >
+              <rect
+                x={x}
+                y={0}
+                width={LINEAR_NODE_W}
+                height={LINEAR_NODE_H}
+                rx={LINEAR_NODE_H / 2}
+                fill={style.fill}
+                stroke={style.stroke}
+                strokeWidth={2}
+                strokeDasharray={style.dasharray}
+              />
+              <text
+                x={x + LINEAR_NODE_W / 2}
+                y={LINEAR_NODE_H / 2}
+                fontFamily={FIGURE_FONT}
+                fontSize={12}
+                fontWeight={500}
+                fill={style.label}
+                dominantBaseline="middle"
+                textAnchor="middle"
+              >
+                {s.name}
+              </text>
+            </motion.g>
+          )
+        })}
       </motion.svg>
-      <figcaption className="sr-only">
-        {states.map((s, i) => `${i + 1}. ${s}`).join(", ")}
-      </figcaption>
+      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
+    </figure>
+  )
+}
+
+function Vertical({ states, caption, captionNumber }: VerticalProps) {
+  const totalH =
+    states.length * VERTICAL_NODE_H + (states.length - 1) * VERTICAL_GAP + 4
+  const totalW = VERTICAL_NODE_W + 8
+
+  return (
+    <figure className="figure figure-narrow">
+      <motion.svg
+        viewBox={`0 0 ${totalW} ${totalH}`}
+        className="figure-svg"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+      >
+        {states.slice(0, -1).map((_, i) => {
+          const y1 = (i + 1) * VERTICAL_NODE_H + i * VERTICAL_GAP
+          const y2 = (i + 1) * (VERTICAL_NODE_H + VERTICAL_GAP)
+          return (
+            <motion.line
+              key={`c-${i}`}
+              x1={totalW / 2}
+              y1={y1}
+              x2={totalW / 2}
+              y2={y2}
+              stroke={FIGURE_TOKENS.connector}
+              strokeWidth={2}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { delay: i * 0.09 + 0.2, duration: 0.3 },
+                },
+              }}
+            />
+          )
+        })}
+        {states.map((s, i) => {
+          const y = i * (VERTICAL_NODE_H + VERTICAL_GAP)
+          const x = (totalW - VERTICAL_NODE_W) / 2
+          const style = NodeStyle(s.type)
+          return (
+            <motion.g
+              key={s.name}
+              variants={{
+                hidden: { opacity: 0, y: 6 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { delay: i * 0.09, duration: 0.4 },
+                },
+              }}
+            >
+              <rect
+                x={x}
+                y={y}
+                width={VERTICAL_NODE_W}
+                height={VERTICAL_NODE_H}
+                rx={VERTICAL_NODE_H / 2}
+                fill={style.fill}
+                stroke={style.stroke}
+                strokeWidth={2}
+                strokeDasharray={style.dasharray}
+              />
+              <text
+                x={totalW / 2}
+                y={y + VERTICAL_NODE_H / 2}
+                fontFamily={FIGURE_FONT}
+                fontSize={12}
+                fontWeight={500}
+                fill={style.label}
+                dominantBaseline="middle"
+                textAnchor="middle"
+              >
+                {s.name}
+              </text>
+            </motion.g>
+          )
+        })}
+      </motion.svg>
+      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
+    </figure>
+  )
+}
+
+function Branching({
+  states,
+  branchAfterIndex,
+  branchLabel,
+  caption,
+  captionNumber,
+}: BranchingProps) {
+  const totalW =
+    states.length * BRANCHING_NODE_W + (states.length - 1) * BRANCHING_GAP
+  const totalH = BRANCHING_SPUR_Y + BRANCHING_NODE_H + 4
+  const exceptionStyle = NodeStyle("exception")
+  const branchX =
+    branchAfterIndex * (BRANCHING_NODE_W + BRANCHING_GAP) + BRANCHING_NODE_W / 2
+
+  return (
+    <figure className="figure">
+      <motion.svg
+        viewBox={`0 0 ${totalW} ${totalH}`}
+        className="figure-svg"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+      >
+        {states.slice(0, -1).map((_, i) => {
+          const x1 = (i + 1) * BRANCHING_NODE_W + i * BRANCHING_GAP
+          const x2 = (i + 1) * (BRANCHING_NODE_W + BRANCHING_GAP)
+          return (
+            <motion.line
+              key={`c-${i}`}
+              x1={x1}
+              y1={BRANCHING_NODE_H / 2}
+              x2={x2}
+              y2={BRANCHING_NODE_H / 2}
+              stroke={FIGURE_TOKENS.connector}
+              strokeWidth={2}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { delay: i * 0.07 + 0.18, duration: 0.3 },
+                },
+              }}
+            />
+          )
+        })}
+        {states.map((s, i) => {
+          const x = i * (BRANCHING_NODE_W + BRANCHING_GAP)
+          const style = NodeStyle(s.type)
+          return (
+            <motion.g
+              key={s.name}
+              variants={{
+                hidden: { opacity: 0, y: 6 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { delay: i * 0.07, duration: 0.4 },
+                },
+              }}
+            >
+              <rect
+                x={x}
+                y={0}
+                width={BRANCHING_NODE_W}
+                height={BRANCHING_NODE_H}
+                rx={BRANCHING_NODE_H / 2}
+                fill={style.fill}
+                stroke={style.stroke}
+                strokeWidth={2}
+                strokeDasharray={style.dasharray}
+              />
+              <text
+                x={x + BRANCHING_NODE_W / 2}
+                y={BRANCHING_NODE_H / 2}
+                fontFamily={FIGURE_FONT}
+                fontSize={11}
+                fontWeight={500}
+                fill={style.label}
+                dominantBaseline="middle"
+                textAnchor="middle"
+              >
+                {s.name}
+              </text>
+            </motion.g>
+          )
+        })}
+        <motion.path
+          d={`M ${branchX} ${BRANCHING_NODE_H} V ${BRANCHING_SPUR_Y}`}
+          stroke={FIGURE_TOKENS.exceptionConnector}
+          strokeWidth={2}
+          strokeDasharray="4 2"
+          fill="none"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { delay: 0.4, duration: 0.3 },
+            },
+          }}
+        />
+        <motion.g
+          variants={{
+            hidden: { opacity: 0, y: 6 },
+            visible: {
+              opacity: 1,
+              y: 0,
+              transition: { delay: 0.5, duration: 0.4 },
+            },
+          }}
+        >
+          <rect
+            x={branchX - BRANCHING_NODE_W / 2}
+            y={BRANCHING_SPUR_Y}
+            width={BRANCHING_NODE_W}
+            height={BRANCHING_NODE_H}
+            rx={BRANCHING_NODE_H / 2}
+            fill={exceptionStyle.fill}
+            stroke={exceptionStyle.stroke}
+            strokeWidth={2}
+            strokeDasharray={exceptionStyle.dasharray}
+          />
+          <text
+            x={branchX}
+            y={BRANCHING_SPUR_Y + BRANCHING_NODE_H / 2}
+            fontFamily={FIGURE_FONT}
+            fontSize={11}
+            fontWeight={500}
+            fill={exceptionStyle.label}
+            dominantBaseline="middle"
+            textAnchor="middle"
+          >
+            {branchLabel}
+          </text>
+        </motion.g>
+      </motion.svg>
+      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
     </figure>
   )
 }

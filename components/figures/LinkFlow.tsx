@@ -1,115 +1,182 @@
 "use client"
 
-import { motion, type Variants } from "framer-motion"
+import { motion } from "framer-motion"
+import { FIGURE_FONT, FIGURE_TOKENS } from "./figure-tokens"
+import { Caption } from "./Caption"
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.22 } },
-}
+const ACCENT = "#ee5a24"
+const NEUTRAL = "rgba(246,245,242,0.85)"
+const LABEL = "rgba(246,245,242,0.7)"
+const CENTER_Y = 44
 
-const docVariants: Variants = {
-  hidden: { x: -10, opacity: 0 },
-  show: { x: 0, opacity: 1, transition: { duration: 0.45 } },
-}
-
-const linkVariants: Variants = {
-  hidden: { scale: 0.6, opacity: 0 },
-  show: {
-    scale: 1,
-    opacity: 1,
-    transition: { type: "spring", stiffness: 300, damping: 22 },
-  },
-}
-
-const checkVariants: Variants = {
-  hidden: { pathLength: 0, opacity: 0 },
-  show: { pathLength: 1, opacity: 1, transition: { duration: 0.5 } },
-}
-
-export function LinkFlow({ label }: { label: string }) {
+export function LinkFlow({
+  caption,
+  captionNumber,
+}: {
+  caption?: React.ReactNode
+  captionNumber?: string
+}) {
   return (
-    <figure aria-label={label} className="figure-shell">
+    <figure className="figure">
       <motion.svg
-        viewBox="0 0 320 80"
-        fill="none"
+        viewBox="0 0 380 110"
         className="figure-svg"
         initial="hidden"
-        whileInView="show"
+        whileInView="visible"
         viewport={{ once: true, margin: "-80px" }}
-        variants={containerVariants}
       >
-        <motion.g variants={docVariants}>
-          <rect
-            x={10}
-            y={20}
-            width={50}
-            height={40}
-            rx={3}
-            stroke="currentColor"
-            strokeWidth={2}
-            fill="transparent"
-          />
-          <line
-            x1={18}
-            y1={32}
-            x2={52}
-            y2={32}
-            stroke="currentColor"
-            strokeWidth={2}
-            opacity={0.3}
-          />
-          <line
-            x1={18}
-            y1={42}
-            x2={44}
-            y2={42}
-            stroke="currentColor"
-            strokeWidth={2}
-            opacity={0.3}
-          />
-        </motion.g>
-        <path
-          d="M70 40 h22"
-          stroke="currentColor"
+        <motion.line
+          x1={76}
+          y1={CENTER_Y}
+          x2={148}
+          y2={CENTER_Y}
+          stroke={FIGURE_TOKENS.connector}
           strokeWidth={2}
-          strokeDasharray="4 4"
-          opacity={0.4}
+          variants={{
+            hidden: { pathLength: 0, opacity: 0 },
+            visible: {
+              pathLength: 1,
+              opacity: 1,
+              transition: { delay: 0.25, duration: 0.4 },
+            },
+          }}
         />
-        <motion.g variants={linkVariants}>
-          <path
-            d="M105 40 a10 10 0 0 1 10 -10 h10 a10 10 0 0 1 0 20 h-10 a10 10 0 0 1 -10 -10 z"
-            stroke="currentColor"
-            strokeWidth={2}
-            fill="transparent"
-          />
-          <path
-            d="M135 40 a10 10 0 0 1 10 -10 h10 a10 10 0 0 1 0 20 h-10 a10 10 0 0 1 -10 -10 z"
-            stroke="currentColor"
-            strokeWidth={2}
-            fill="transparent"
-          />
-        </motion.g>
-        <path
-          d="M175 40 h22"
-          stroke="currentColor"
+        <motion.line
+          x1={216}
+          y1={CENTER_Y}
+          x2={288}
+          y2={CENTER_Y}
+          stroke={FIGURE_TOKENS.connector}
           strokeWidth={2}
-          strokeDasharray="4 4"
-          opacity={0.4}
+          variants={{
+            hidden: { pathLength: 0, opacity: 0 },
+            visible: {
+              pathLength: 1,
+              opacity: 1,
+              transition: { delay: 0.5, duration: 0.4 },
+            },
+          }}
         />
-        <circle cx={232} cy={40} r={18} stroke="#ee5a24" strokeWidth={2} fill="transparent" />
-        <motion.path
-          d="M222 40 l7 7 l13 -13"
-          stroke="#ee5a24"
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-          variants={checkVariants}
-        />
+        <motion.g
+          variants={{
+            hidden: { opacity: 0, x: -10 },
+            visible: { opacity: 1, x: 0, transition: { duration: 0.4 } },
+          }}
+        >
+          <path
+            d="M30 18 H60 L72 30 V72 H30 Z"
+            fill="none"
+            stroke={NEUTRAL}
+            strokeWidth={2}
+            strokeLinejoin="round"
+          />
+          <path
+            d="M60 18 V30 H72"
+            fill="none"
+            stroke={NEUTRAL}
+            strokeWidth={2}
+            strokeLinejoin="round"
+          />
+          <line x1={38} y1={42} x2={64} y2={42} stroke={NEUTRAL} strokeWidth={1.5} opacity={0.55} />
+          <line x1={38} y1={50} x2={62} y2={50} stroke={NEUTRAL} strokeWidth={1.5} opacity={0.55} />
+          <line x1={38} y1={58} x2={56} y2={58} stroke={NEUTRAL} strokeWidth={1.5} opacity={0.55} />
+          <text
+            x={51}
+            y={94}
+            fontFamily={FIGURE_FONT}
+            fontSize={11}
+            fontWeight={500}
+            fill={LABEL}
+            textAnchor="middle"
+          >
+            PDF rendered
+          </text>
+        </motion.g>
+        <motion.g
+          variants={{
+            hidden: { opacity: 0, scale: 0.85 },
+            visible: {
+              opacity: 1,
+              scale: 1,
+              transition: { delay: 0.35, duration: 0.4 },
+            },
+          }}
+        >
+          <circle
+            cx={182}
+            cy={CENTER_Y}
+            r={24}
+            fill="rgba(238,90,36,0.06)"
+            stroke={ACCENT}
+            strokeWidth={2}
+          />
+          <path
+            d="M182 31 L195 38 V48 Q182 60 169 48 V38 Z"
+            fill="none"
+            stroke={ACCENT}
+            strokeWidth={1.6}
+            strokeLinejoin="round"
+          />
+          <path
+            d="M178 45 L181 48 L187 41"
+            fill="none"
+            stroke={ACCENT}
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <text
+            x={182}
+            y={94}
+            fontFamily={FIGURE_FONT}
+            fontSize={11}
+            fontWeight={500}
+            fill={LABEL}
+            textAnchor="middle"
+          >
+            Signed URL
+          </text>
+        </motion.g>
+        <motion.g
+          variants={{
+            hidden: { opacity: 0, x: 10 },
+            visible: {
+              opacity: 1,
+              x: 0,
+              transition: { delay: 0.55, duration: 0.4 },
+            },
+          }}
+        >
+          <circle
+            cx={324}
+            cy={CENTER_Y}
+            r={24}
+            fill="rgba(238,90,36,0.06)"
+            stroke={ACCENT}
+            strokeWidth={2}
+          />
+          <path
+            d="M313 44 L321 52 L335 38"
+            fill="none"
+            stroke={ACCENT}
+            strokeWidth={2.4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <text
+            x={324}
+            y={94}
+            fontFamily={FIGURE_FONT}
+            fontSize={11}
+            fontWeight={500}
+            fill={LABEL}
+            textAnchor="middle"
+          >
+            Customer opens
+          </text>
+        </motion.g>
       </motion.svg>
-      <figcaption className="sr-only">
-        A document is signed and shared, the link verified.
-      </figcaption>
+      {caption ? <Caption number={captionNumber}>{caption}</Caption> : null}
     </figure>
   )
 }

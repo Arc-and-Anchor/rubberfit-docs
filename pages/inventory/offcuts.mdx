@@ -12,7 +12,17 @@ Most ERPs treat offcuts as scrap. Rubberfit treats them as **first-class invento
 
 This is the single biggest material-yield lever in the platform. Customers report 15–25% of small-part demand satisfied from offcut stock without ever opening a new roll.
 
-<Cascade label="Parent roll fragmenting into four child offcuts of varying dimensions" />
+<Cascade
+  parentLabel="Parent roll · 120″"
+  children={[
+    { label: "Offcut A · 24″", width: 70 },
+    { label: "Offcut B · 31″", width: 80 },
+    { label: "Offcut C · 40″", width: 96 },
+    { label: "Offcut D · 48″", width: 110 },
+  ]}
+  captionNumber="Fig. 1"
+  caption="A 120″ roll fragments into four labeled offcuts after a cut commits — each retains parent_roll_id lineage."
+/>
 
 ## The offcut record
 
