@@ -3,7 +3,7 @@ import type { DocsThemeConfig } from "nextra-theme-docs";
 import { useConfig } from "nextra-theme-docs";
 
 const SITE_URL = "https://docs.rubberfit.app";
-const PREVIEW_IMAGE_URL = `${SITE_URL}/favicon.svg`;
+const PREVIEW_IMAGE_URL = `${SITE_URL}/social-preview.png`;
 
 const RubberfitMark = () => (
   <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
@@ -53,6 +53,7 @@ function DocsHead() {
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="RubberFit Docs" />
       <meta property="og:image" content={PREVIEW_IMAGE_URL} />
+      <meta property="og:image:alt" content="RubberFit Docs" />
       <meta name="twitter:card" content="summary" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
