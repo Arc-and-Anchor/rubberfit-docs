@@ -54,7 +54,7 @@ function DocsHead() {
       <meta property="og:site_name" content="RubberFit Docs" />
       <meta property="og:image" content={PREVIEW_IMAGE_URL} />
       <meta property="og:image:alt" content="RubberFit Docs" />
-      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={PREVIEW_IMAGE_URL} />
