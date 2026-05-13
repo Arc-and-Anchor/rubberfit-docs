@@ -1,5 +1,6 @@
 import React from "react";
 import type { DocsThemeConfig } from "nextra-theme-docs";
+import { useConfig } from "nextra-theme-docs";
 
 const RubberfitMark = () => (
   <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
@@ -31,6 +32,32 @@ const RubberfitMark = () => (
     </span>
   </span>
 );
+
+function DocsHead() {
+  const { frontMatter, title: pageTitle } = useConfig();
+  const description =
+    frontMatter.description ??
+    "Documentation for RubberFit — setup, operations, security, and troubleshooting for rubber-roll manufacturing teams.";
+  const title =
+    pageTitle === "Introduction" ? "RubberFit Docs" : `${pageTitle} - RubberFit Docs`;
+
+  return (
+    <>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="RubberFit Docs" />
+      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+      <link rel="apple-touch-icon" href="/favicon.svg" />
+      <meta name="theme-color" content="#ee5a24" />
+    </>
+  );
+}
 
 const config: DocsThemeConfig = {
   logo: <RubberfitMark />,
@@ -69,18 +96,7 @@ const config: DocsThemeConfig = {
     defaultMenuCollapseLevel: 1,
     toggleButton: true,
   },
-  head: (
-    <>
-      <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-      <link rel="apple-touch-icon" href="/favicon.svg" />
-      <meta property="og:title" content="Rubberfit Docs" />
-      <meta
-        property="og:description"
-        content="Documentation for Rubberfit — manufacturing operations for rubber-roll fabricators."
-      />
-      <meta name="theme-color" content="#ee5a24" />
-    </>
-  ),
+  head: DocsHead,
   darkMode: true,
   nextThemes: {
     defaultTheme: "light",
